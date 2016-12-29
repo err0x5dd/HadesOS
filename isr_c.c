@@ -4,8 +4,6 @@
 void handler(struct cpu_state* cpu) {
     
     kprintf("Interrupt aufgetreten\n");
-    long i;
-    for(i = 0; i < 1000000000; i++);
     
     if(cpu->interrupt <= 0x1f) { // Exceptions
         kprintf("Exception %x, Kernel angehalten!\n", cpu->interrupt);

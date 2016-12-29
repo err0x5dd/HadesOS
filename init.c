@@ -15,18 +15,8 @@ void init(void) {
     init_idt();
     kprintf("IDT geladen\n");
     
-    long i;
-    int colorSwitch = 0;
-    for(i = 0; i < 100000000; i++) {
-        if(colorSwitch == 0) {
-            ksetcolor(0xF0);
-            colorSwitch = 1;
-        } else {
-            ksetcolor(0x0F);
-            colorSwitch = 0;
-        }
-        kprintf("%x", i);
-    }
+    
+    // continue before this point with kernel initialisation
     
     kprintf("Interrupts aktivieren...\n");
     asm volatile("sti");
