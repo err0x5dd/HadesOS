@@ -10,6 +10,7 @@ LDFLAGS = -melf_i386 -Tkernel.ld
 
 kernel: $(OBJS)
 	$(LD) $(LDFLAGS) -o $@ $^
+	mv kernel bin/
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $^
