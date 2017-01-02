@@ -70,7 +70,7 @@ pre_handler:
     // ISR starten
     push %esp
     call handler
-    add $4, %esp
+    mov %eax, %esp
     
     // CPU-Zusand wiederherstellen
     pop %eax
