@@ -1,6 +1,8 @@
 #include "include/console.h"
 #include "include/gdt.h"
 #include "include/idt.h"
+#include "include/system.h"
+#include "include/multitasking.h"
 
 void init(void) {
     kclean();
@@ -15,12 +17,18 @@ void init(void) {
     init_idt();
     kprintf("IDT geladen\n");
     
+    kprintf("PIT auf 1 Hz setzen...\n");
+    int counter = 1193182 / 1;
+    outb(0x43, 0x34);
+    outb(0x40, counter & 0xFF);
+    outb(0x40, counter >> 8);
+    kprintf("PIT auf 1 Hz gesetzt\n");
     
-    // continue before this point with kernel initialisation
-    
-    kprintf("Interrupts aktivieren...\n");
+    kprintf("Aktiviere Interrupts...\n");
     asm volatile("sti");
+    kprintf("Interrupts aktiviert\n");
     
-    while(1) {
-    }
+    kprintf("Aktiviere Multitasking...\n");
+    init_multitasking();
+    kprintf("Multitasking aktiviert\n");
 }

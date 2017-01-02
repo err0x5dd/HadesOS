@@ -15,7 +15,7 @@ static void kscroll(void) {
         video[i] = video[i + (2 * 80)];
     }
     
-    for(; i < 2 * 25 * 80; i++) {
+    for(; i < 2 * 24 * 80; i++) {
         video[i] = 0x00;
     }
 }

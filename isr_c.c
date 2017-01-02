@@ -1,9 +1,10 @@
 #include "include/system.h"
 #include "include/console.h"
+#include "include/multitasking.h"
 
-void handler(struct cpu_state* cpu) {
+struct cpu_state* handler(struct cpu_state* cpu) {
     
-    kprintf("Interrupt aufgetreten\n");
+    struct cpu_state* new_cpu = cpu;
     
     if(cpu->interrupt <= 0x1f) { // Exceptions
         kprintf("Exception %x, Kernel angehalten!\n", cpu->interrupt);
@@ -13,7 +14,12 @@ void handler(struct cpu_state* cpu) {
         }
     } else if(cpu->interrupt >= 0x20 && cpu->interrupt <= 0x2f) { // IRQs
         
-        kprintf("IRQ %x", cpu->interrupt);
+        if(cpu->interrupt == 0x20) {
+            new_cpu = schedule(cpu);
+        } else {
+            kprintf("IRQ %x\n", cpu->interrupt);
+        }
+        
         
         // End of Interrupt an PIC senden
         if(cpu->interrupt >= 0x28) {
@@ -27,6 +33,10 @@ void handler(struct cpu_state* cpu) {
         if(cpu->interrupt == 0x30) {
             char* str = (char*) cpu->eax;
             kprintf("%s", str);
+        } else if(cpu->interrupt == 0x31) {
+            kprintf("#Test#\n");
         }
     }
+    
+    return new_cpu;
 }

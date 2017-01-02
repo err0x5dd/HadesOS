@@ -6,7 +6,7 @@
 #define IDT_FLAG_RING0 0x00
 #define IDT_FLAG_RING3 0x60
 
-#define IDT_ENTRIES 5
+#define IDT_ENTRIES 256
 
 static long long unsigned int idt[IDT_ENTRIES];
 
@@ -48,6 +48,7 @@ extern void isr_46(void);
 extern void isr_47(void);
 
 extern void isr_48(void);
+extern void isr_49(void);
 
 static void set_entry(int i, void (*f)(), unsigned int selector, int flags) {
     unsigned long int handler = (unsigned long int) f;
@@ -125,6 +126,7 @@ void init_idt(void) {
     set_entry(47, isr_47, 0x8, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
     
     set_entry(48, isr_48, 0x8, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
+    set_entry(49, isr_49, 0x8, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
     
     load_idt();
 }

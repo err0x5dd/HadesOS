@@ -54,6 +54,7 @@ isr 47
 
 // Syscall
 isr 48
+isr 49
 
 .extern handler
 pre_handler:

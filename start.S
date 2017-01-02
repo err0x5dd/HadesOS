@@ -21,14 +21,8 @@ _start:
     mov $kernel_stack, %esp
     
     call init
-
-    // Wenn jemals aus init zurueckgekehrt wird, den Prozessor anhalten
-_stop:
-    cli
-    hlt
     
-    // Vorgang wiederholen, wenn nicht erfolgreich
-    jmp _stop
+    jmp .
 
 // 8 kiB fuer den Stack reservieren
 // Note: Stack waechst nach unten
