@@ -20,6 +20,8 @@ _start:
     // Stack an die Startposition des Stack setzen
     mov $kernel_stack, %esp
     
+    push %ebx
+    
     call init
     
     jmp .

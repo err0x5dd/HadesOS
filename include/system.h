@@ -7,8 +7,20 @@ static inline void outb(uint16_t port, uint8_t data) {
     asm volatile("outb %0, %1" : : "a" (data), "Nd" (port));
 }
 
-static inline void inb(uint16_t port, uint8_t data) {
+static inline uint8_t inb(uint16_t port) {
+    uint8_t data;
     asm volatile("inb %1, %0" : "=a" (data) : "Nd" (port));
+    return data;
+}
+
+static inline void* memset(void* buf, int c, int n) {
+    unsigned char* p = buf;
+    
+    while (n--) {
+        *p++ = c;
+    }
+    
+    return buf;
 }
 
 struct cpu_state {

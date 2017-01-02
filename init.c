@@ -1,13 +1,19 @@
 #include "include/console.h"
-#include "include/gdt.h"
-#include "include/idt.h"
+#include "include/interrupt.h"
 #include "include/system.h"
 #include "include/multitasking.h"
+#include "include/mm.h"
+#include "include/multiboot.h"
 
-void init(void) {
+void init(struct multiboot_info *mb_info) {
     kclean();
     
     kprintf("Starte HadesOS...\n");
+    
+    kprintf("Aktiviere PMM - physical memory management...\n");
+    pmm_init(mb_info);
+    mb_info = NULL;
+    kprintf("PMM aktiviert\n");
     
     kprintf("Lade GDT...\n");
     init_gdt();
@@ -16,13 +22,6 @@ void init(void) {
     kprintf("Lade IDT...\n");
     init_idt();
     kprintf("IDT geladen\n");
-    
-    kprintf("PIT auf 1 Hz setzen...\n");
-    int counter = 1193182 / 1;
-    outb(0x43, 0x34);
-    outb(0x40, counter & 0xFF);
-    outb(0x40, counter >> 8);
-    kprintf("PIT auf 1 Hz gesetzt\n");
     
     kprintf("Aktiviere Interrupts...\n");
     asm volatile("sti");

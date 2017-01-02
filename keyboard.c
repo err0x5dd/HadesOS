@@ -1,6 +1,7 @@
 #include "include/keyboard.h"
 #include "include/system.h"
+#include "include/console.h"
 
-void initKeyboard(void) {
+void init_keyboard(void) {
     
 }

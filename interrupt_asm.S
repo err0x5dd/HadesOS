@@ -67,10 +67,20 @@ pre_handler:
     push %ebx
     push %eax
     
+    // Kernel-Datensegmente laden
+    mov $0x10, %ax
+    mov %ax, %ds
+    mov %ax, %es
+    
     // ISR starten
     push %esp
     call handler
     mov %eax, %esp
+    
+    // User-Datensegmente laden
+    mov $0x23, %ax
+    mov %ax, %ds
+    mov %ax, %es
     
     // CPU-Zusand wiederherstellen
     pop %eax

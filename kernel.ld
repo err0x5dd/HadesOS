@@ -12,7 +12,9 @@ SECTIONS
      * Kernel an 1 MB laden
      */
     . = 0x100000;
-
+    
+    kernel_start = .;
+    
     /*
      * Erst der Multiboot-Header, damit dieser in den ersten 8 kiB ist
      * Die anderen Sektionen hintereinander
@@ -30,4 +32,6 @@ SECTIONS
     .bss ALIGN(4096) : {
         *(.bss)
     }
+    
+    kernel_end = .;
 }
