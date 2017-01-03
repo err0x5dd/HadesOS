@@ -1,25 +1,35 @@
 #include "include/console.h"
 #include "include/system.h"
 #include "include/mm.h"
-
-struct task {
-    struct cpu_state*   cpu_state;
-    struct task*        next;
-};
+#include "include/multitasking.h"
 
 static struct task* first_task = NULL;
 static struct task* current_task = NULL;
+
+static uint8_t flags;
 
 static void task_a(void) {
     //while(1) {
         kprintf("Task A\n");
     //}
+    
+    while(1);
 }
 
 static void task_b(void) {
     //while(1) {
         kprintf("Task B\n");
     //}
+    
+    while(1);
+}
+
+static void task_c(void) {
+    //while(1) {
+        kprintf("Task C\n");
+    //}
+    
+    while(1);
 }
 
 struct task* init_task(void* entry) {
@@ -56,25 +66,37 @@ struct task* init_task(void* entry) {
 }
 
 void init_multitasking(void) {
+    flags = 0x00;
     init_task(task_a);
     init_task(task_b);
+    init_task(task_c);
+}
+
+uint8_t get_schedule_flags(void) {
+    return flags;
+}
+
+void set_schedule_flags(uint8_t new_flags) {
+    flags = new_flags;
 }
 
 struct cpu_state* schedule(struct cpu_state* cpu) {
-    if(current_task != NULL) {
-        current_task->cpu_state = cpu;
-    }
-    
-    if(current_task == NULL) {
-        current_task = first_task;
-    } else {
-        current_task = current_task->next;
+    if(!(flags & SCHEDULE_FLAG_DO_NOT_DISTURB)) {
+        if(current_task != NULL) {
+            current_task->cpu_state = cpu;
+        }
+        
         if(current_task == NULL) {
             current_task = first_task;
+        } else {
+            current_task = current_task->next;
+            if(current_task == NULL) {
+                current_task = first_task;
+            }
         }
+        
+        cpu = current_task->cpu_state;
     }
-    
-    cpu = current_task->cpu_state;
     
     return cpu;
 }
