@@ -204,7 +204,23 @@ struct cpu_state* handler(struct cpu_state* cpu) {
     struct cpu_state* new_cpu = cpu;
     
     if(cpu->interrupt <= 0x1f) { // Exceptions
+        ksetcolor(0x04);
         kprintf("Exception %x, Kernel angehalten!\n", cpu->interrupt);
+        
+        kprintf("eax: %x\n", cpu->eax);
+        kprintf("ebx: %x\n", cpu->ebx);
+        kprintf("ecx: %x\n", cpu->ecx);
+        kprintf("edx: %x\n", cpu->edx);
+        
+        kprintf("cs: %x\n", cpu->cs);
+        kprintf("ss: %x\n", cpu->ss);
+        
+        kprintf("esi: %x\n", cpu->esi);
+        kprintf("edi: %x\n", cpu->edi);
+        
+        kprintf("ebp: %x\n", cpu->ebp);
+        kprintf("esp: %x\n", cpu->esp);
+        kprintf("eip: %x\n", cpu->eip);
         
         while(1) {
             asm volatile("cli; hlt");

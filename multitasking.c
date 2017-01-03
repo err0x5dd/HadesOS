@@ -11,11 +11,15 @@ static struct task* first_task = NULL;
 static struct task* current_task = NULL;
 
 static void task_a(void) {
-    kprintf("Task A\n");
+    //while(1) {
+        kprintf("Task A\n");
+    //}
 }
 
 static void task_b(void) {
-    kprintf("Task B\n");
+    //while(1) {
+        kprintf("Task B\n");
+    //}
 }
 
 struct task* init_task(void* entry) {
