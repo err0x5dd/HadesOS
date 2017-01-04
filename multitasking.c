@@ -2,6 +2,7 @@
 #include "include/system.h"
 #include "include/mm.h"
 #include "include/multitasking.h"
+#include "include/keyboard.h"
 
 static struct task* first_task = NULL;
 static struct task* current_task = NULL;
@@ -24,12 +25,30 @@ static void task_b(void) {
     while(1);
 }
 
-static void task_c(void) {
-    //while(1) {
-        kprintf("Task C\n");
-    //}
+static void shell(void) {
+    int x, y;
     
-    while(1);
+    while(1) {
+        set_schedule_flags(get_schedule_flags() | SCHEDULE_FLAG_DO_NOT_DISTURB);
+        x = kgetPosX();
+        y = kgetPosY();
+        
+        ksetpos(0, 24);
+        
+        kprintf("> ");
+        
+        if(keyboard_buffer_entrys > 0) {
+            int i;
+            for(i = 0; i < keyboard_buffer_entrys; i++) {
+                // FIXME Use %c when a scancode translation function is implemented
+                kprintf("%x", keyboard_buffer[i]);
+            }
+            keyboard_buffer_entrys = 0;
+        }
+        
+        ksetpos(x, y);
+        set_schedule_flags(get_schedule_flags() & ~SCHEDULE_FLAG_DO_NOT_DISTURB);
+    }
 }
 
 struct task* init_task(void* entry) {
@@ -69,7 +88,7 @@ void init_multitasking(void) {
     flags = 0x00;
     init_task(task_a);
     init_task(task_b);
-    init_task(task_c);
+    init_task(shell);
 }
 
 uint8_t get_schedule_flags(void) {

@@ -11,11 +11,11 @@ static char* video = (char*) 0xb8000;
 
 static void kscroll(void) {
     int i;
-    for(i = 0; i < 2 * 24 * 80; i++) {
+    for(i = 0; i < 2 * 23 * 80; i++) {
         video[i] = video[i + (2 * 80)];
     }
     
-    for(; i < 2 * 24 * 80; i++) {
+    for(; i < 2 * 23 * 80; i++) {
         video[i] = 0x00;
     }
 }
@@ -64,6 +64,14 @@ static void kprintn(unsigned int nr, int base) {
 
 //###############################################################################
 
+int kgetPosX(void) {
+    return curX;
+}
+
+int kgetPosY(void) {
+    return curY;
+}
+
 void ksetpos(int x, int y) {
     curX = x;
     curY = y;
@@ -86,6 +94,7 @@ void kprintf(const char* str, ...) {
     va_list ap;
     const char* s;
     unsigned int nr;
+    char c;
     
     va_start(ap, str);
     while(*str) {
@@ -95,6 +104,10 @@ void kprintf(const char* str, ...) {
                 case 's':
                     s = va_arg(ap, char*);
                     kprints(s);
+                    break;
+                case 'c':
+                    c = va_arg(ap, char);
+                    kprintc(c);
                     break;
                 case 'b':
                     nr = va_arg(ap, unsigned int);

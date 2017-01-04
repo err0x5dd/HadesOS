@@ -2,6 +2,7 @@
 #include "include/system.h"
 #include "include/console.h"
 #include "include/multitasking.h"
+#include "include/keyboard.h"
 
 extern void isr_0(void);
 extern void isr_1(void);
@@ -230,6 +231,8 @@ struct cpu_state* handler(struct cpu_state* cpu) {
         if(cpu->interrupt == 0x20) {
             new_cpu = schedule(cpu);
             tss[1] = (uint32_t) (new_cpu + 1);
+        } else if(cpu->interrupt == 0x21) {
+            keyboard_isr(cpu);
         } else {
             kprintf("IRQ %x\n", cpu->interrupt);
         }
