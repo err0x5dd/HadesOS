@@ -36,16 +36,12 @@ static void shell(void) {
         ksetpos(0, 24);
         
         kprintf("> ");
-        
-        if(keyboard_buffer_entrys > 0) {
-            int i;
-            for(i = 0; i < keyboard_buffer_entrys; i++) {
-                // FIXME Use %c when a scancode translation function is implemented
-                kprintf("%x", keyboard_buffer[i]);
-            }
-            keyboard_buffer_entrys = 0;
+
+        char c;
+        while((c = getc()) != '\n') {
+            kprintf("Test: %x", c);
         }
-        
+
         ksetpos(x, y);
         set_schedule_flags(get_schedule_flags() & ~SCHEDULE_FLAG_DO_NOT_DISTURB);
     }

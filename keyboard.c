@@ -1,6 +1,12 @@
 #include "include/keyboard.h"
 #include "include/system.h"
 #include "include/console.h"
+#include "include/mm.h"
+
+#define KEY_BUFFER_SIZE 4096
+uint8_t* key_buffer;
+uint8_t key_buffer_first = 0;
+uint8_t key_buffer_last = 0;
 
 static void send_keyboard_command(uint8_t command) {
     while(inb(0x64) & 0x02);
@@ -8,8 +14,13 @@ static void send_keyboard_command(uint8_t command) {
 }
 
 void init_keyboard(void) {
-    keyboard_buffer_entrys = 0;
     
+    key_buffer = (uint8_t*) pmm_alloc();
+    memset(key_buffer, 0, sizeof(KEY_BUFFER_SIZE));
+    for(int i = 0; i < 4096; i++) {
+        kprintf("%x ", key_buffer[i]);
+    }
+    kprintf("\n");
     while(inb(0x64) & 0x01) {
         inb(0x60);
     }
@@ -60,7 +71,35 @@ void keyboard_isr(struct cpu_state* cpu) {
     
     keycode = scancode;
     
-    if(keyboard_buffer_entrys < 256) {
-        keyboard_buffer[keyboard_buffer_entrys] = keycode;
+    // Prüfen, ob Speicherende erreicht wurde
+    if(key_buffer_last == KEY_BUFFER_SIZE) {
+        // Prüfen, ob Speicherbeginn leer ist
+        if(key_buffer_first > 0) {
+            // TODO Verschiebe alle Buffer-Einträge an den Anfang
+            key_buffer_first = 0; // Setze Anfangsindex auf den Speicherbeginn
+        } else {
+            return;
+        }
     }
+    
+    // Füge Keycode dem Buffer hinzu
+    key_buffer[key_buffer_last] = keycode;
+    key_buffer_last++;
+    kprintf("key_buffer_first: %d\n", key_buffer_first);
+    kprintf("key_buffer_flast: %d\n", key_buffer_last);
+    kprintf("Key Interrupt %x\n", keycode);
 }
+
+char getc() {
+    char retc;
+    
+    while(key_buffer_last == 0);
+    
+    retc = key_buffer[key_buffer_first];
+    key_buffer_first++;
+    
+    kprintf("Key getc %x\n", retc);
+    
+    return retc;
+}
+

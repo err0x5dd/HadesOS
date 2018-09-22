@@ -5,7 +5,16 @@
 #include "include/multiboot.h"
 #include "include/system.h"
 
+// Auskommentieren für eine erweiterte Ausgabe
+#define DEBUG
+
+#ifdef DEBUG
+#include "include/console.h"
+#endif
+
+// 32 (breite pro eintrag) * 32768 (einträge) * 4096 (page größe) = 4 GiB
 // 0 = Speicher belegt / 1 = Speicher frei
+// 1 Bit representiert eine Page von 4096 Byte
 #define BITMAP_SIZE 32768
 static uint32_t bitmap[BITMAP_SIZE];
 
@@ -45,10 +54,13 @@ void* pmm_alloc(void) {
     int i, j;
     
     for(i = 0; i < BITMAP_SIZE; i++) {
-        if(bitmap[i] != 1) {
+        if(bitmap[i] > 0) { // Prüfe ob ein Bit frei ist
             for(j = 0; j < 32; j++) {
                 if(bitmap[i] & (1 << j)) {
                     bitmap[i] &= ~(1 << j);
+                    #ifdef DEBUG
+                    kprintf("%x wird uebergeben\n", (uintptr_t) ((i * 32 + j) * 4096));
+                    #endif
                     return (void*) ((i * 32 + j) * 4096);
                 }
             }
@@ -60,9 +72,15 @@ void* pmm_alloc(void) {
 static void pmm_mark_used(void* page) {
     uintptr_t index = (uintptr_t) page / 4096;
     bitmap[index / 32] |= (1 << (index % 32));
+    #ifdef DEBUG
+    //kprintf("%x als belegt markiert\n", (uintptr_t)page);
+    #endif
 }
 
 void pmm_free(void* page) {
     uintptr_t index = (uintptr_t) page / 4096;
-    bitmap[index / 32] |= (1 << (index % 32));
+    bitmap[index / 32] &= ~(1 << (index % 32));
+    #ifdef DEBUG
+    //kprintf("%x als frei markiert\n", (uintptr_t)page);
+    #endif
 }

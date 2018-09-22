@@ -1,5 +1,7 @@
 #include "include/console.h"
 #include "include/stdarg.h"
+#include "include/serial.h"
+#include "include/system.h"
 
 static int curX = 0;
 static int curY = 0;
@@ -11,19 +13,23 @@ static char* video = (char*) 0xb8000;
 
 static void kscroll(void) {
     int i;
-    for(i = 0; i < 2 * 23 * 80; i++) {
+    for(i = 0; i < 2 * 24 * 80; i++) {
         video[i] = video[i + (2 * 80)];
     }
     
-    for(; i < 2 * 23 * 80; i++) {
+    for(; i < 2 * 25 * 80; i++) {
         video[i] = 0x00;
     }
+    
+    curY--;
 }
 
 static void kprintc(char c) {
     if(curX >= 80 || c == '\n') {
         curY++;
         curX = 0;
+        write_serial('\r');
+        write_serial('\n');
     }
     
     if(c == '\n') {
@@ -36,7 +42,9 @@ static void kprintc(char c) {
     
     video[2 * (curY * 80 + curX)] = c;
     video[2 * (curY * 80 + curX) + 1] = color;
-    
+
+    write_serial(c);
+
     curX++;
 }
 
@@ -75,6 +83,11 @@ int kgetPosY(void) {
 void ksetpos(int x, int y) {
     curX = x;
     curY = y;
+    uint16_t pos = y * 80 + x;
+    outb(0x3D4, 0x0F);
+    outb(0x3D5, (uint8_t) (pos & 0xFF));
+    outb(0x3D4, 0x0E);
+    outb(0x3D5, (uint8_t) ((pos >> 8) & 0xFF));
 }
 
 void ksetcolor(char col) {

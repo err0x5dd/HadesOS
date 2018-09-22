@@ -13,6 +13,9 @@ static inline uint8_t inb(uint16_t port) {
     return data;
 }
 
+// buf = Zeiger auf Speicheradresse
+// c = zu setzender Wert
+// n = größe des Speichers
 static inline void* memset(void* buf, int c, int n) {
     unsigned char* p = buf;
     
