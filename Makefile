@@ -24,5 +24,8 @@ clean:
 	rm $(OBJS)
 	clear
 
+run:
+	qemu-system-x86_64 -serial file:output.txt -kernel bin/kernel -m 1024
+
 .PHONY: clean all
 

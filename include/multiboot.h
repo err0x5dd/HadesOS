@@ -16,6 +16,13 @@ struct multiboot_info {
     void*       mbs_mmap_addr;
 } __attribute__((packed));
 
+struct multiboot_mods {
+    uint32_t    mod_start;
+    uint32_t    mod_end;
+    uint32_t    string;
+    uint32_t    reserved;
+} __attribute__((packed));
+
 struct multiboot_mmap {
     uint32_t    entry_size;
     uint64_t    base;

@@ -6,19 +6,22 @@
 #include "include/system.h"
 
 // Auskommentieren für eine erweiterte Ausgabe
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 #include "include/console.h"
 #endif
 
-// 32 (breite pro eintrag) * 32768 (einträge) * 4096 (page größe) = 4 GiB
-// 0 = Speicher belegt / 1 = Speicher frei
-// 1 Bit representiert eine Page von 4096 Byte
-#define BITMAP_SIZE 32768
-static uint32_t bitmap[BITMAP_SIZE];
+// set the page size as 4 kiB
+#define PAGE_SIZE 4096
 
-static void pmm_mark_used(void* page);
+struct memory_stack {
+    void*   start;
+    void*   prev_memstack;
+
+} __attribute__((packed));
+
+static struct memory_stack* memstack_current = 0xbadc0de;
 
 extern const void kernel_start;
 extern const void kernel_end;
@@ -28,59 +31,95 @@ void pmm_init(struct multiboot_info* mb_info) {
     struct multiboot_mmap* mmap_end = (void*)
         ((uintptr_t) mb_info->mbs_mmap_addr + mb_info->mbs_mmap_length);
     
-    memset(bitmap, 0, sizeof(bitmap));
-    
     while(mmap < mmap_end) {
         if(mmap->type == 1) {
-            uintptr_t addr = mmap->base;
-            uintptr_t end_addr = addr + mmap->length;
+            void* addr = (void*) mmap->base;
+            void* end_addr = (void*) ((uint64_t) addr + mmap->length);
             
+
             while(addr < end_addr) {
-                pmm_free((void*) addr);
-                addr += 0x1000;
+                if(addr >= (void*) &kernel_start && addr <= (void*) &kernel_end) // Exclude Kernel
+                {
+                    #ifdef DEBUG
+                    kprintf("%x is used by kernel -> no free memory page\n", addr);
+                    #endif
+                } else {
+                    if(memstack_current == 0xbadc0de) {
+                        #ifdef DEBUG
+                        kprintf("%x will be used for starting point of memory stack\n", addr);
+                        #endif
+                        stack_init(addr);
+                    } else {
+                        pmm_free(addr);
+                    }
+                }
+                addr += PAGE_SIZE;
             }
         }
         mmap++;
     }
-    
-    uintptr_t addr = (uintptr_t) &kernel_start;
-    while(addr < (uintptr_t) &kernel_end) {
-        pmm_mark_used((void*) addr);
-        addr += 0x1000;
-    }
+
+    #ifdef DEBUG
+    kprintf("memstack_current: %x\n", memstack_current);
+    kprintf("kernel_start: %x\n", &kernel_start);
+    kprintf("kernel_end: %x\n", &kernel_end);
+    #endif
+
 }
+
 
 void* pmm_alloc(void) {
-    int i, j;
+    struct memory_stack* memstack_alloc = memstack_current;
     
-    for(i = 0; i < BITMAP_SIZE; i++) {
-        if(bitmap[i] > 0) { // Prüfe ob ein Bit frei ist
-            for(j = 0; j < 32; j++) {
-                if(bitmap[i] & (1 << j)) {
-                    bitmap[i] &= ~(1 << j);
-                    #ifdef DEBUG
-                    kprintf("%x wird uebergeben\n", (uintptr_t) ((i * 32 + j) * 4096));
-                    #endif
-                    return (void*) ((i * 32 + j) * 4096);
-                }
-            }
-        }
-    }
-    return NULL;
-}
-
-static void pmm_mark_used(void* page) {
-    uintptr_t index = (uintptr_t) page / 4096;
-    bitmap[index / 32] |= (1 << (index % 32));
     #ifdef DEBUG
-    //kprintf("%x als belegt markiert\n", (uintptr_t)page);
+    kprintf("memstack_current: %x\n", memstack_current);
+    kprintf("memstack_alloc: %x\n", memstack_alloc);
+    kprintf("memstack_alloc->start: %x\n", memstack_alloc->start);
+    kprintf("memstack_alloc->prev_memstack: %x\n", memstack_alloc->prev_memstack);
     #endif
+
+    if((void*) memstack_alloc->prev_memstack == (void*) memstack_alloc->start) {
+        #ifdef DEBUG
+        kprintf("No free memory pages!\n");
+        #endif
+        return NULL;
+    }
+
+    struct memory_stack* memstack = memstack_alloc->prev_memstack;
+    memstack_current = memstack->start;
+    
+    #ifdef DEBUG
+    kprintf("alloc: return address: %x\n", memstack_alloc->start);
+    kprintf("alloc: new memstack_current: %x\n", memstack_current);
+    #endif
+    return (void*) memstack_alloc->start;
 }
 
-void pmm_free(void* page) {
-    uintptr_t index = (uintptr_t) page / 4096;
-    bitmap[index / 32] &= ~(1 << (index % 32));
+void pmm_free(uintptr_t page) {
+    struct memory_stack* memstack = (void*) page;
+/*
+    kprintf("memstack: %x\n", memstack);
+    kprintf("memstack2: %x\n", &memstack);
+    kprintf("memstack3: %x\n", *memstack);
+    kprintf("memstack_current: %x\n", memstack_current);
+*/
+    memstack->start = memstack;
+    memstack->prev_memstack = memstack_current;
+
+    memstack_current = memstack->start;
+}
+
+void stack_init(void* page) {
+    memstack_current = (void*) page;
+    struct memory_stack* memstack = memstack_current;
+
+    memstack->start = memstack;
+    memstack->prev_memstack = memstack->start;
+    
     #ifdef DEBUG
-    //kprintf("%x als frei markiert\n", (uintptr_t)page);
+    kprintf("memstack_current: %x\n", memstack_current);
+    kprintf("memstack: %x\n", memstack);
+    kprintf("memstack->start: %x\n", memstack->start);
+    kprintf("memstack->prev_memstack: %x\n", memstack->prev_memstack);
     #endif
 }

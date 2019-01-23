@@ -17,7 +17,8 @@ void init_keyboard(void) {
     
     key_buffer = (uint8_t*) pmm_alloc();
     memset(key_buffer, 0, sizeof(KEY_BUFFER_SIZE));
-    for(int i = 0; i < 4096; i++) {
+    kprintf("Printing allocated keyboard buffer!\n");
+    for(int i = 0; i < KEY_BUFFER_SIZE; i++) {
         kprintf("%x ", key_buffer[i]);
     }
     kprintf("\n");
