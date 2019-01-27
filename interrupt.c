@@ -229,8 +229,10 @@ struct cpu_state* handler(struct cpu_state* cpu) {
     } else if(cpu->interrupt >= 0x20 && cpu->interrupt <= 0x2f) { // IRQs
         
         if(cpu->interrupt == 0x20) {
+            /*
             new_cpu = schedule(cpu);
             tss[1] = (uint32_t) (new_cpu + 1);
+            */
         } else if(cpu->interrupt == 0x21) {
             keyboard_isr(cpu);
         } else {

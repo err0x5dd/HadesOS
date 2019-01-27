@@ -29,15 +29,15 @@ void init(struct multiboot_info *mb_info) {
     kprintf("Lade IDT...\n");
     init_idt();
     kprintf("IDT geladen\n");
-/*
+
     kprintf("Aktiviere Tastatur...\n");
     init_keyboard();
     kprintf("Tastatur aktiviert\n");
-
+/*
     kprintf("Aktiviere Interrupts...\n");
     asm volatile("sti");
     kprintf("Interrupts aktiviert\n");
-
+/*
     kprintf("Aktiviere Multitasking...\n");
     init_multitasking();
     kprintf("Multitasking aktiviert\n");

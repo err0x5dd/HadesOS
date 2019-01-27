@@ -6,7 +6,7 @@
 #include "include/system.h"
 
 // Auskommentieren für eine erweiterte Ausgabe
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #include "include/console.h"
@@ -18,7 +18,7 @@ struct memory_stack {
 
 } __attribute__((packed));
 
-static struct memory_stack* memstack_current = 0xbadc0de;
+static struct memory_stack* memstack_current = (void*) 0xbadc0de;
 
 extern const void kernel_start;
 extern const void kernel_end;
