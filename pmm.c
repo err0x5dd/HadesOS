@@ -12,9 +12,6 @@
 #include "include/console.h"
 #endif
 
-// set the page size as 4 kiB
-#define PAGE_SIZE 4096
-
 struct memory_stack {
     void*   start;
     void*   prev_memstack;
