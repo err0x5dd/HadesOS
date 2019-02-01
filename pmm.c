@@ -6,7 +6,7 @@
 #include "include/system.h"
 
 // Auskommentieren für eine erweiterte Ausgabe
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 #include "include/console.h"

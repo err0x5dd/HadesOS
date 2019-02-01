@@ -107,7 +107,7 @@ void kprintf(const char* str, ...) {
     va_list ap;
     const char* s;
     unsigned int nr;
-    char c;
+    unsigned int c;
     
     va_start(ap, str);
     while(*str) {
@@ -119,7 +119,7 @@ void kprintf(const char* str, ...) {
                     kprints(s);
                     break;
                 case 'c':
-                    c = va_arg(ap, char);
+                    c = va_arg(ap, unsigned int);
                     kprintc(c);
                     break;
                 case 'b':

@@ -12,15 +12,9 @@ void init(struct multiboot_info *mb_info) {
     kprintf("Starte HadesOS...\n");
     
     kprintf("Aktiviere PMM - physical memory management...\n");
-    memory_detect(mb_info);
     pmm_init(mb_info);
     mb_info = NULL;
     kprintf("PMM aktiviert\n");
-
-    kprintf("Speicheranforderungen:\n");
-    kprintf("1: %x\n", pmm_alloc());
-    kprintf("2: %x\n", pmm_alloc());
-    kprintf("3: %x\n", pmm_alloc());
 
     kprintf("Lade GDT...\n");
     init_gdt();
@@ -31,12 +25,20 @@ void init(struct multiboot_info *mb_info) {
     kprintf("IDT geladen\n");
 
     kprintf("Aktiviere Tastatur...\n");
-    init_keyboard();
+    kbd_init();
     kprintf("Tastatur aktiviert\n");
-/*
+
     kprintf("Aktiviere Interrupts...\n");
     asm volatile("sti");
     kprintf("Interrupts aktiviert\n");
+
+    while(1) {
+        char c = getc();
+        if(c != 0x00) {
+            kprintf("%c", c);
+        }
+    }
+
 /*
     kprintf("Aktiviere Multitasking...\n");
     init_multitasking();
