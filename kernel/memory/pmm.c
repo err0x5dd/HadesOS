@@ -9,7 +9,7 @@
 //#define DEBUG
 
 #ifdef DEBUG
-#include "include/console.h"
+#include "../include/console.h"
 #endif
 
 struct memory_stack {
@@ -28,6 +28,18 @@ void pmm_init(struct multiboot_info* mb_info) {
     struct multiboot_mmap* mmap_end = (void*)
         ((uintptr_t) mb_info->mbs_mmap_addr + mb_info->mbs_mmap_length);
     
+    struct multiboot_mods* mods = mb_info->mbs_mods_addr; 
+    
+    kprintf("Modules loaded: %d\n", mb_info->mbs_mods_count);
+    
+    for(uint32_t i = 0; i < mb_info->mbs_mods_count; i++) {
+        kprintf("Module %d '%s':\n", i, mods[i].string);
+        kprintf("  Start: %x\n", mods[i].mod_start);
+        kprintf("  End:   %x\n", mods[i].mod_end);
+    }
+    
+    uint32_t mods_counter = 0;
+
     while(mmap < mmap_end) {
         if(mmap->type == 1) {
             void* addr = (void*) mmap->base;
@@ -35,11 +47,31 @@ void pmm_init(struct multiboot_info* mb_info) {
             
 
             while(addr < end_addr) {
-                if(addr >= (void*) &kernel_start && addr <= (void*) &kernel_end) // Exclude Kernel
-                {
+                if(addr >= (void*) &kernel_start && addr <= (void*) &kernel_end) { // exclude kernel
                     #ifdef DEBUG
                     kprintf("%x is used by kernel -> no free memory page\n", addr);
                     #endif
+                } else if(addr >= (void*) &mb_info && addr <= (void*) (&mb_info + sizeof(struct multiboot_info))) { // exclude multiboot structure
+                    #ifdef DEBUG
+                    kprintf("%x is used by multiboot structure -> no free memory page\n", addr);
+                    #endif 
+                } else if(addr >= (void*) mb_info->mbs_mmap_addr && addr <= (void*) (mb_info->mbs_mmap_addr + mb_info->mbs_mmap_length)) { // exclude mmap structure
+                    #ifdef DEBUG
+                    kprintf("%x is used by mmap structure -> no free memory page\n", addr);
+                    #endif 
+                } else if(addr >= (void*) mb_info->mbs_mods_addr && addr <= (void*) (mb_info->mbs_mods_addr + (sizeof(struct multiboot_mods) * mb_info->mbs_mods_count))) { // exclude mmap structure
+                    #ifdef DEBUG
+                    kprintf("%x is used by mods structure -> no free memory page\n", addr);
+                    #endif 
+                } else if(addr >= (void*) mods[mods_counter].mod_start && addr <= (void*) mods[mods_counter].mod_end) { // exclude modules
+                    #ifdef DEBUG
+                    kprintf("%x is used by module %s\n", addr, mods[mods_counter].string);
+                    #endif
+                    
+                    // Increment module counter when this page is the module end
+                    if((addr + PAGE_SIZE) > (void*) mods[mods_counter].mod_end && (mods_counter + 1) < mb_info->mbs_mods_count) {
+                        mods_counter++;
+                    }
                 } else {
                     if(memstack_current == 0xbadc0de) {
                         #ifdef DEBUG
