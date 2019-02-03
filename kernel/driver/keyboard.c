@@ -1,7 +1,7 @@
-#include "include/keyboard.h"
-#include "include/system.h"
-#include "include/console.h"
-#include "include/mm.h"
+#include "../include/keyboard.h"
+#include "../include/system.h"
+#include "../include/console.h"
+#include "../include/mm.h"
 
 // Uncomment for debug output
 //#define DEBUG
