@@ -223,16 +223,18 @@ struct cpu_state* handler(struct cpu_state* cpu) {
         kprintf("esp: %x\n", cpu->esp);
         kprintf("eip: %x\n", cpu->eip);
         
+        kprintf("error: %x\n", cpu->error);
+
         while(1) {
             asm volatile("cli; hlt");
         }
     } else if(cpu->interrupt >= 0x20 && cpu->interrupt <= 0x2f) { // IRQs
         
         if(cpu->interrupt == 0x20) {
-            /*
+            
             new_cpu = schedule(cpu);
             tss[1] = (uint32_t) (new_cpu + 1);
-            */
+            
         } else if(cpu->interrupt == 0x21) {
             kbd_isr();
         } else {
@@ -253,7 +255,7 @@ struct cpu_state* handler(struct cpu_state* cpu) {
             char* str = (char*) cpu->eax;
             kprintf("%s", str);
         } else if(cpu->interrupt == 0x31) {
-            kprintf("#Test#\n");
+            // yet unsued
         }
     }
     

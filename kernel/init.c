@@ -28,6 +28,10 @@ void init(struct multiboot_info *mb_info) {
     kbd_init();
     kprintf("Tastatur aktiviert\n");
 
+    kprintf("Aktiviere Multitasking...\n");
+    init_multitasking();
+    kprintf("Multitasking aktiviert\n");
+    
     kprintf("Aktiviere Interrupts...\n");
     asm volatile("sti");
     kprintf("Interrupts aktiviert\n");
@@ -39,9 +43,4 @@ void init(struct multiboot_info *mb_info) {
         }
     }
 
-/*
-    kprintf("Aktiviere Multitasking...\n");
-    init_multitasking();
-    kprintf("Multitasking aktiviert\n");
-*/
 }

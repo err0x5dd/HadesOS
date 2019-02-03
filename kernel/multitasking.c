@@ -10,42 +10,29 @@ static struct task* current_task = NULL;
 static uint8_t flags;
 
 static void task_a(void) {
-    //while(1) {
-        kprintf("Task A\n");
-    //}
-    
+    while(1) {
+        kprintf("A");
+    }
+
     while(1);
 }
 
 static void task_b(void) {
-    //while(1) {
-        kprintf("Task B\n");
-    //}
-    
+    while(1) {
+        kprintf("B");
+    }
+
     while(1);
 }
 
-static void shell(void) {
-    int x, y;
-    
+static void task_c(void) {
     while(1) {
-        set_schedule_flags(get_schedule_flags() | SCHEDULE_FLAG_DO_NOT_DISTURB);
-        x = kgetPosX();
-        y = kgetPosY();
-        
-        ksetpos(0, 24);
-        
-        kprintf("> ");
-
-        char c;
-        while((c = getc()) != '\n') {
-            kprintf("Test: %x", c);
-        }
-
-        ksetpos(x, y);
-        set_schedule_flags(get_schedule_flags() & ~SCHEDULE_FLAG_DO_NOT_DISTURB);
+        kprintf("C");
     }
+
+    while(1);
 }
+
 
 struct task* init_task(void* entry) {
     
@@ -60,7 +47,7 @@ struct task* init_task(void* entry) {
         .esi = 0,
         .edi = 0,
         .ebp = 0,
-        .esp = (uint32_t) user_stack + 4096,
+        .esp = (uint32_t) user_stack + PAGE_SIZE,
         .eip = (uint32_t) entry,
         
         .cs = 0x18 | 0x03,
@@ -69,7 +56,7 @@ struct task* init_task(void* entry) {
         .eflags = 0x200,
     };
     
-    struct cpu_state* state = (void*) (stack + 4096 - sizeof(new_state));
+    struct cpu_state* state = (void*) (stack + PAGE_SIZE - sizeof(new_state));
     *state = new_state;
     
     struct task* task = pmm_alloc();
@@ -84,7 +71,8 @@ void init_multitasking(void) {
     flags = 0x00;
     init_task(task_a);
     init_task(task_b);
-    init_task(shell);
+    init_task(task_c);
+    //init_task(shell);
 }
 
 uint8_t get_schedule_flags(void) {
@@ -94,6 +82,7 @@ uint8_t get_schedule_flags(void) {
 void set_schedule_flags(uint8_t new_flags) {
     flags = new_flags;
 }
+
 
 struct cpu_state* schedule(struct cpu_state* cpu) {
     if(!(flags & SCHEDULE_FLAG_DO_NOT_DISTURB)) {

@@ -9,8 +9,8 @@ CFLAGS = -m32 -Wall -g -fno-stack-protector -I include
 LDFLAGS = -melf_i386 -Tkernel.ld
 
 kernel: $(OBJS)
-	$(LD) $(LDFLAGS) -o bin/$@ $^
-	objdump -S bin/kernel >debug.txt
+	$(LD) $(LDFLAGS) -o ../bin/$@ $^
+	objdump -S ../bin/kernel >debug.txt
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $^
@@ -25,7 +25,6 @@ clean:
 	clear
 
 run:
-	qemu-system-x86_64 -serial file:output.txt -kernel bin/kernel -m 1024
+	qemu-system-x86_64 -serial file:output.txt -kernel ../bin/kernel -m 1024
 
 .PHONY: clean all
-
