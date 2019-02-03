@@ -3,6 +3,7 @@
 #include "include/console.h"
 #include "include/multitasking.h"
 #include "include/keyboard.h"
+#include "include/syscall.h"
 
 extern void isr_0(void);
 extern void isr_1(void);
@@ -42,7 +43,6 @@ extern void isr_46(void);
 extern void isr_47(void);
 
 extern void isr_48(void);
-extern void isr_49(void);
 
 #define GDT_FLAG_DATASEG    0x02
 #define GDT_FLAG_CODESEG    0x0a
@@ -194,8 +194,8 @@ void init_idt(void) {
     set_idt_entry(46, isr_46, 0x8, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
     set_idt_entry(47, isr_47, 0x8, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
     
-    set_idt_entry(48, isr_48, 0x8, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
-    set_idt_entry(49, isr_49, 0x8, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
+    // Syscall should be in ring 3
+    set_idt_entry(48, isr_48, 0x8, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING3 | IDT_FLAG_PRESENT);
     
     load_idt();
 }
@@ -247,17 +247,13 @@ struct cpu_state* handler(struct cpu_state* cpu) {
             outb(0xa0, 0x20);
         }
         outb(0x20, 0x20);
-    } else { // Syscalls
-        
-        kprintf("Syscall %x", cpu->interrupt);
-        
+    } else {
         if(cpu->interrupt == 0x30) {
-            char* str = (char*) cpu->eax;
-            kprintf("%s", str);
-        } else if(cpu->interrupt == 0x31) {
-            // yet unsued
+            new_cpu = syscall(cpu);
+            tss[1] = (uint32_t) (new_cpu + 1);
         }
     }
     
     return new_cpu;
 }
+

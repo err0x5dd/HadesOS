@@ -3,6 +3,7 @@
 #include "include/mm.h"
 #include "include/multitasking.h"
 #include "include/keyboard.h"
+#include "include/syscall.h"
 
 static struct task* first_task = NULL;
 static struct task* current_task = NULL;
@@ -12,6 +13,7 @@ static uint8_t flags;
 static void task_a(void) {
     while(1) {
         kprintf("A");
+        switch_task();
     }
 
     while(1);
@@ -20,6 +22,7 @@ static void task_a(void) {
 static void task_b(void) {
     while(1) {
         kprintf("B");
+        switch_task();
     }
 
     while(1);
@@ -28,6 +31,7 @@ static void task_b(void) {
 static void task_c(void) {
     while(1) {
         kprintf("C");
+        switch_task();
     }
 
     while(1);
@@ -75,6 +79,11 @@ void init_multitasking(void) {
     //init_task(shell);
 }
 
+void switch_task(void) {
+    asm volatile("mov %0, %%eax;"
+                 "int $0x30" : : "i" (SYSCALL_SWITCH_TASK));
+}
+
 uint8_t get_schedule_flags(void) {
     return flags;
 }
@@ -83,18 +92,19 @@ void set_schedule_flags(uint8_t new_flags) {
     flags = new_flags;
 }
 
-
 struct cpu_state* schedule(struct cpu_state* cpu) {
+    // only switch when scheduling is allowed
     if(!(flags & SCHEDULE_FLAG_DO_NOT_DISTURB)) {
+        // save current cpu state
         if(current_task != NULL) {
             current_task->cpu_state = cpu;
         }
         
-        if(current_task == NULL) {
+        if(current_task == NULL) {      // when there is no current task, start with the first task
             current_task = first_task;
-        } else {
+        } else {                        // set next task as current task
             current_task = current_task->next;
-            if(current_task == NULL) {
+            if(current_task == NULL) {  // when there is no next task, jump to first task
                 current_task = first_task;
             }
         }

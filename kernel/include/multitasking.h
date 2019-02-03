@@ -15,5 +15,6 @@ struct cpu_state* schedule(struct cpu_state* cpu);
 void init_multitasking(void);
 uint8_t get_schedule_flags(void);
 void set_schedule_flags(uint8_t new_flags);
+void switch_task(void);
 
 #endif

@@ -57,6 +57,7 @@ isr 48
 isr 49
 
 .extern handler
+.global pre_handler
 pre_handler:
     // CPU-Zustand sichern
     push %ebp
@@ -91,7 +92,7 @@ pre_handler:
     pop %edi
     pop %ebp
     
-    // Fehlercode und Interruptnummer vom Stack entfernen
+    // Fehlercode und Interruptnummer vom Stack entfernen (4 Bytes)
     add $8, %esp
     
     iret
