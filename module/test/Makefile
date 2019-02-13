@@ -10,7 +10,7 @@ LDFLAGS = -melf_i386 -Ttest.ld
 
 test: $(OBJS)
 	$(LD) $(LDFLAGS) -o ../../bin/module/test.ko $^
-	#objdump -S ../../bin/module/test.ko >debug.txt
+	objdump -S ../../bin/module/test.ko >debug.txt
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $^
