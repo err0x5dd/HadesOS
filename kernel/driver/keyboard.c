@@ -214,7 +214,24 @@ char getc() {
     if(key != 0x00) {
         kbuff_head++;
     }
+    while(keycode_to_ascii(key) == 0x00) {
+        key = *kbuff_head;
+        if(key != 0x00) {
+            kbuff_head++;
+        }
+    }
     char c = keycode_to_ascii(key);
+    #ifdef DEBUG
+    kprintf("Ascii %c returned\n", c);
+    #endif
     return c;
 }
 
+uint8_t get_key() {
+    while(kbuff_head == kbuff_tail);
+    uint8_t key = *kbuff_head;
+    if(key != 0x00) {
+        kbuff_head++;
+    }
+    return key;
+}

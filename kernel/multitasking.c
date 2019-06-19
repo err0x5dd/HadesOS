@@ -28,15 +28,87 @@ static void task_b(void) {
     while(1);
 }
 
-static void task_c(void) {
-    while(1) {
-        kprintf("C");
-        switch_task();
-    }
 
-    while(1);
+
+const char* cmds[] = {"help"};
+
+static void task_shell_cmds(int id) {
+    switch(id) {
+    case 0:
+        kprintf("Available commands:\n");
+        ////kprintf("%d\n", (sizeof(cmds) / 4));
+        for(int i = 0; i < (sizeof(cmds) / 4); i++) {
+            kprintf("%s\n", cmds[i]);
+        }
+        break;
+    }
 }
 
+static void task_shell(void) {
+    char* input = pmm_alloc();
+    
+    while(1) {
+        
+        uint8_t counter = 0;
+        
+        kprintf("> ");
+        // Get keyboard input
+        input[counter] = getc();
+        switch_task();
+        counter++;
+        //kprintf("input[%d]: %c\n", counter-1, input[counter-1]);
+        kprintf("%c", input[counter-1]);
+        while(input[counter-1] != '\n') {
+            input[counter] = getc();
+            switch_task();
+            counter++;
+            //kprintf("input[%d]: %c\n", counter-1, input[counter-1]);
+            kprintf("%c", input[counter-1]);
+    
+            if(counter >= PAGE_SIZE) {
+                kprintf("INPUT CLEARED!\n");
+                kprintf("> ");
+                counter = 0;
+            }
+        }
+        input[counter-1] = '\0';
+        
+        if(input[0] == '\0') {
+            continue;
+        }
+        
+        int ret_code = 99;
+        for(int i = 0; i < (sizeof(cmds) / 4); i++) {
+            //kprintf("Check if input of \"%s\" is command \"%s\"\n", input, cmds[i]);
+            if(input[0] == cmds[i][0]) {
+                // check for full command
+                char c = ' ';
+                for(int j = 0; c != '\0'; j++) {
+                    c = cmds[i][j];
+                    if(input[j] == c) {
+                        ret_code = 0;
+                        continue;
+                    } else {
+                        //kprintf("Command is not %s\n", cmds[i]);
+                        ret_code = 99;
+                        break;
+                    }
+                }
+                if(ret_code == 0) {
+                    task_shell_cmds(i);
+                    break;
+                }
+            }
+        
+        }
+        if(ret_code == 99) {
+            kprintf("Command \"%s\" not found!\n", input);
+        }
+        
+    }
+    kprintf("INPUT STOPPED!\n");
+    while(1);
+}
 
 struct task* init_task(void* entry) {
     
@@ -73,10 +145,10 @@ struct task* init_task(void* entry) {
 
 void init_multitasking(void) {
     flags = 0x00;
-    init_task(task_a);
-    init_task(task_b);
-    init_task(task_c);
-    //init_task(shell);
+    //init_task(task_a);
+    //init_task(task_b);
+    //init_task(task_c);
+    init_task(task_shell);
 }
 
 void switch_task(void) {
