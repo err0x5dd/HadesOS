@@ -13,7 +13,7 @@ void init(struct multiboot_info *mb_info) {
     
     kprintf("Aktiviere PMM - physical memory management...\n");
     pmm_init(mb_info);
-    mb_info = NULL;
+    //mb_info = NULL;
     kprintf("PMM aktiviert\n");
 
     kprintf("Lade GDT...\n");
@@ -29,18 +29,13 @@ void init(struct multiboot_info *mb_info) {
     kprintf("Tastatur aktiviert\n");
 
     kprintf("Aktiviere Multitasking...\n");
-    init_multitasking();
+    init_multitasking(mb_info);
     kprintf("Multitasking aktiviert\n");
     
     kprintf("Aktiviere Interrupts...\n");
     asm volatile("sti");
     kprintf("Interrupts aktiviert\n");
 
-    while(1) {
-        char c = getc();
-        if(c != 0x00) {
-            kprintf("%c", c);
-        }
-    }
-
+    kprintf("INIT_END!\n");
+    while(1);
 }

@@ -4,6 +4,8 @@
 #include "include/multitasking.h"
 #include "include/keyboard.h"
 #include "include/syscall.h"
+#include "include/multiboot.h"
+#include "include/loader.h"
 
 static struct task* first_task = NULL;
 static struct task* current_task = NULL;
@@ -88,6 +90,8 @@ static void task_shell(void) {
                     if(input[j] == c) {
                         ret_code = 0;
                         continue;
+                    } else if (cmds[i][j] == '\0') {
+                        break;
                     } else {
                         //kprintf("Command is not %s\n", cmds[i]);
                         ret_code = 99;
@@ -143,12 +147,21 @@ struct task* init_task(void* entry) {
     return task;
 }
 
-void init_multitasking(void) {
+void init_multitasking(struct multiboot_info* mb_info) {
     flags = 0x00;
     //init_task(task_a);
     //init_task(task_b);
     //init_task(task_c);
     init_task(task_shell);
+    
+    if(mb_info->mbs_mods_count == 0) {
+        kprintf("Starting shell\n");
+        init_task(task_shell);
+    } else {
+        kprintf("Starting first module\n");
+        struct multiboot_mods* modules = mb_info->mbs_mods_addr;
+        init_elf((void*) modules[0].mod_start);
+    }
 }
 
 void switch_task(void) {

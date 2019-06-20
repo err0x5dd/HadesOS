@@ -3,6 +3,8 @@
 
 #include "stdint.h"
 
+#define ELF_MAGIC 0x464C457F
+
 struct elf_header {
     uint32_t magic;
     uint32_t version;
