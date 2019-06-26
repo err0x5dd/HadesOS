@@ -224,6 +224,13 @@ struct cpu_state* handler(struct cpu_state* cpu) {
         kprintf("eip: %x\n", cpu->eip);
         
         kprintf("error: %x\n", cpu->error);
+        
+        // Check for Page Fault and print CR2
+        if(cpu->interrupt == 0xe) {
+            uint32_t cr2;
+            asm volatile("mov %%cr2, %0" : "=r" (cr2));
+            kprintf("cr2: %x\n", cr2);
+        }
 
         while(1) {
             asm volatile("cli; hlt");

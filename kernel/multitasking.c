@@ -47,7 +47,8 @@ static void task_shell_cmds(int id) {
 }
 
 static void task_shell(void) {
-    char* input = pmm_alloc();
+    //char* input = pmm_alloc();
+    char* input = vmm_alloc();
     
     while(1) {
         
@@ -116,8 +117,10 @@ static void task_shell(void) {
 
 struct task* init_task(void* entry) {
     
-    uint8_t* stack = pmm_alloc();
-    uint8_t* user_stack = pmm_alloc();
+    //uint8_t* stack = pmm_alloc();
+    uint8_t* stack = vmm_alloc();
+    //uint8_t* user_stack = pmm_alloc();
+    uint8_t* user_stack = vmm_alloc();
     
     struct cpu_state new_state = {
         .eax = 0,
@@ -139,7 +142,8 @@ struct task* init_task(void* entry) {
     struct cpu_state* state = (void*) (stack + PAGE_SIZE - sizeof(new_state));
     *state = new_state;
     
-    struct task* task = pmm_alloc();
+    //struct task* task = pmm_alloc();
+    struct task* task = vmm_alloc();
     task->cpu_state = state;
     task->next = first_task;
     first_task = task;
@@ -151,8 +155,7 @@ void init_multitasking(struct multiboot_info* mb_info) {
     flags = 0x00;
     //init_task(task_a);
     //init_task(task_b);
-    //init_task(task_c);
-    init_task(task_shell);
+    //init_task(task_shell);
     
     if(mb_info->mbs_mods_count == 0) {
         kprintf("Starting shell\n");

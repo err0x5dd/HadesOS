@@ -6,19 +6,19 @@
 #include "../include/system.h"
 
 // Auskommentieren für eine erweiterte Ausgabe
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #include "../include/console.h"
 #endif
 
-struct memory_stack {
-    void*   start;
-    void*   prev_memstack;
+// Moved to mm.h
+//struct memory_stack {
+//    void*   start;
+//    void*   prev_memstack;
+//} __attribute__((packed));
 
-} __attribute__((packed));
-
-static struct memory_stack* memstack_current = (void*) 0xbadc0de;
+struct memory_stack* memstack_current = (void*) 0xbadc0de;
 
 extern const void kernel_start;
 extern const void kernel_end;
@@ -105,17 +105,32 @@ void* pmm_alloc(void) {
     kprintf("memstack_alloc: %x\n", memstack_alloc);
     kprintf("memstack_alloc->start: %x\n", memstack_alloc->start);
     kprintf("memstack_alloc->prev_memstack: %x\n", memstack_alloc->prev_memstack);
+    
+    for(int i = 0; i < sizeof(struct memory_stack); i++) {
+        kprintf("%0x", memstack_current[i]);
+        if(i % 2 == 1)
+            kprintf(" ");
+    }
+    kprintf("\n");
+    
     #endif
 
-    if((void*) memstack_alloc->prev_memstack == (void*) memstack_alloc->start) {
+    if((uintptr_t) memstack_alloc->prev_memstack == (uintptr_t) 0xbadc0de) {
         #ifdef DEBUG
         kprintf("No free memory pages!\n");
         #endif
         return NULL;
     }
 
-    struct memory_stack* memstack = memstack_alloc->prev_memstack;
-    memstack_current = memstack->start;
+    //struct memory_stack* memstack = memstack_alloc->prev_memstack;
+    
+    if(memstack_current == MEMSTACK_ADDR) {
+        kprintf("memstack_current: %x\n", memstack_current);
+        kprintf("memstack_current: %0x\n", memstack_current);
+        vmm_map_page(NULL, MEMSTACK_ADDR, memstack_alloc->prev_memstack);
+    } else {
+        memstack_current = memstack_alloc->prev_memstack;
+    }
     
     #ifdef DEBUG
     kprintf("alloc: return address: %x\n", memstack_alloc->start);
@@ -143,7 +158,7 @@ void stack_init(void* page) {
     struct memory_stack* memstack = memstack_current;
 
     memstack->start = memstack;
-    memstack->prev_memstack = memstack->start;
+    memstack->prev_memstack = 0xbadc0de;
     
     #ifdef DEBUG
     kprintf("memstack_current: %x\n", memstack_current);

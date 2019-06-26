@@ -109,11 +109,27 @@ void kprintf(const char* str, ...) {
     unsigned int nr;
     unsigned int c;
     
+    uint8_t flags = 0x00;
+    #define CON_FLAG_NOPREFIX 0x01
+    #define CON_FLAG_NOPRINT 0x02
+    
     va_start(ap, str);
     while(*str) {
-        if(*str == '%') {
-            str++;
+        if(*str == '%' || (flags & CON_FLAG_NOPRINT)) {
+            if(*str == '%')
+                str++;
             switch(*str) {
+                case '0':
+                    if(*(str+1) == 'b' || *(str+1) == 'x') {
+                        flags |= CON_FLAG_NOPREFIX | CON_FLAG_NOPRINT;
+                        //kprintc('?');
+                        //kprints("TEST\n");
+                        //kprintn(flags, 2);
+                    } else {
+                        kprintc('%');
+                        kprintc('0');
+                    }
+                    break;
                 case 's':
                     s = va_arg(ap, char*);
                     kprints(s);
@@ -125,7 +141,12 @@ void kprintf(const char* str, ...) {
                 case 'b':
                     nr = va_arg(ap, unsigned int);
                     kprintn(nr, 2);
-                    kprintc('b');
+                    if(!(flags & CON_FLAG_NOPRINT)) {
+                        kprintc('b');
+                    } else {
+                        flags &= ~(CON_FLAG_NOPREFIX | CON_FLAG_NOPRINT);
+                        //kprintc('#');
+                    }
                     break;
                 case 'd':
                     nr = va_arg(ap, unsigned int);
@@ -133,7 +154,17 @@ void kprintf(const char* str, ...) {
                     break;
                 case 'x':
                     nr = va_arg(ap, unsigned int);
-                    kprints("0x");
+                    //kprints("\nTEST: ");
+                    //kprintn(flags, 2);
+                    //kprints("\n");
+                    if(!(flags & CON_FLAG_NOPREFIX)) {
+                        kprints("0x");
+                    } else {
+                        flags &= ~(CON_FLAG_NOPREFIX | CON_FLAG_NOPRINT);
+                        //kprints("2TEST2\n");
+                        //kprintn(flags, 2);
+                        //kprintc('#');
+                    }
                     kprintn(nr, 16);
                     break;
                 case '%':
@@ -143,6 +174,11 @@ void kprintf(const char* str, ...) {
                     goto out;
                     break;
                 default:
+                    if(flags & CON_FLAG_NOPRINT) {
+                        //kprints("\n3TEST3 ");
+                        //kprintn(flags, 2);
+                        //kprints("\n");
+                    }
                     kprintc('%');
                     kprintc(*str);
                     break;
