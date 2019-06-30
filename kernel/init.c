@@ -17,12 +17,12 @@ void init(struct multiboot_info *mb_info) {
     kprintf("Starte HadesOS...\n");
     
     // Test
-    kprintf("Test 0x: %0x !\n", 0xbadc0de);
-    kprintf("Test  x: %x !\n", 0xbadc0de);
-    kprintf("Test 0s: %0s !\n", "Teststring");
-    kprintf("Test  s: %s !\n", "Teststring");
-    kprintf("Test 0b: %0b !\n", 0xbadc0de);
-    kprintf("Test  b: %b !\n", 0xbadc0de);
+//    kprintf("Test 0x: %0x !\n", 0xbadc0de);
+//    kprintf("Test  x: %x !\n", 0xbadc0de);
+//    kprintf("Test 0s: %0s !\n", "Teststring");
+//    kprintf("Test  s: %s !\n", "Teststring");
+//    kprintf("Test 0b: %0b !\n", 0xbadc0de);
+//    kprintf("Test  b: %b !\n", 0xbadc0de);
     
     kprintf("Aktiviere PMM - physical memory management...\n");
     pmm_init(mb_info);
