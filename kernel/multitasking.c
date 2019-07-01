@@ -47,8 +47,8 @@ static void task_shell_cmds(int id) {
 }
 
 static void task_shell(void) {
-    //char* input = pmm_alloc();
-    char* input = vmm_alloc(NULL);
+    char* input = pmm_alloc();
+    //char* input = vmm_alloc(NULL);
     
     while(1) {
         
@@ -117,10 +117,10 @@ static void task_shell(void) {
 
 struct task* init_task(void* entry) {
     
-    //uint8_t* stack = pmm_alloc();
-    uint8_t* stack = vmm_alloc(NULL);
-    //uint8_t* user_stack = pmm_alloc();
-    uint8_t* user_stack = vmm_alloc(NULL);
+    uint8_t* stack = pmm_alloc();
+    //uint8_t* stack = vmm_alloc(NULL);
+    uint8_t* user_stack = pmm_alloc();
+    //uint8_t* user_stack = vmm_alloc(NULL);
     
     struct cpu_state new_state = {
         .eax = 0,
@@ -142,8 +142,8 @@ struct task* init_task(void* entry) {
     struct cpu_state* state = (void*) (stack + PAGE_SIZE - sizeof(new_state));
     *state = new_state;
     
-    //struct task* task = pmm_alloc();
-    struct task* task = vmm_alloc(NULL);
+    struct task* task = pmm_alloc();
+    //struct task* task = vmm_alloc(NULL);
     task->cpu_state = state;
     task->next = first_task;
     first_task = task;

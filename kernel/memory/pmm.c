@@ -5,20 +5,26 @@
 #include "../include/multiboot.h"
 #include "../include/system.h"
 
-// Auskommentieren für eine erweiterte Ausgabe
-#define DEBUG
+// Uncomment for debug output
+//#define DEBUG
 
 #ifdef DEBUG
 #include "../include/console.h"
 #endif
 
-// Moved to mm.h
-//struct memory_stack {
-//    void*   start;
-//    void*   prev_memstack;
-//} __attribute__((packed));
 
-struct memory_stack* memstack_current = (void*) 0xbadc0de;
+// Bitmap for pages under 1 MB
+//uint32_t bitmap
+
+// Pointer to stack for every page over 1 MB
+// When there is no free memory page, then stack points to NULL
+struct stack {
+    struct stack* prev;
+    uintptr_t page[127];
+} __attribute__((packed));
+
+static struct stack* stack_pointer = NULL;
+static uint32_t stack_counter = 0;
 
 extern const void kernel_start;
 extern const void kernel_end;
@@ -73,14 +79,7 @@ void pmm_init(struct multiboot_info* mb_info) {
                         mods_counter++;
                     }
                 } else {
-                    if(memstack_current == 0xbadc0de) {
-                        #ifdef DEBUG
-                        kprintf("%x will be used for starting point of memory stack\n", addr);
-                        #endif
-                        stack_init(addr);
-                    } else {
-                        pmm_free(addr);
-                    }
+                    pmm_free(addr);
                 }
                 addr += PAGE_SIZE;
             }
@@ -88,82 +87,85 @@ void pmm_init(struct multiboot_info* mb_info) {
         mmap++;
     }
 
-    #ifdef DEBUG
-    kprintf("memstack_current: %x\n", memstack_current);
-    kprintf("kernel_start: %x\n", &kernel_start);
-    kprintf("kernel_end: %x\n", &kernel_end);
-    #endif
-
 }
 
 
 void* pmm_alloc(void) {
-    struct memory_stack* memstack_alloc = memstack_current;
+    uintptr_t page = NULL;
+    
+    kprintf("[TODO] [pmm] Add allocation for pages less 1 MiB\n");
     
     #ifdef DEBUG
-    kprintf("memstack_current: %x\n", memstack_current);
-    kprintf("memstack_alloc: %x\n", memstack_alloc);
-    kprintf("memstack_alloc->start: %x\n", memstack_alloc->start);
-    kprintf("memstack_alloc->prev_memstack: %x\n", memstack_alloc->prev_memstack);
-    
-    for(int i = 0; i < sizeof(struct memory_stack); i++) {
-        kprintf("%0x", memstack_current[i]);
-        if(i % 2 == 1)
-            kprintf(" ");
-    }
-    kprintf("\n");
-    
+    kprintf("[DEBUG] [pmm] Get new address from stack\n");
     #endif
-
-    if((uintptr_t) memstack_alloc->prev_memstack == (uintptr_t) 0xbadc0de) {
-        #ifdef DEBUG
-        kprintf("No free memory pages!\n");
-        #endif
-        return NULL;
-    }
-
-    //struct memory_stack* memstack = memstack_alloc->prev_memstack;
     
-    if(memstack_current == MEMSTACK_ADDR) {
-        kprintf("memstack_current: %x\n", memstack_current);
-        kprintf("memstack_current: %0x\n", memstack_current);
-        vmm_map_page(NULL, MEMSTACK_ADDR, memstack_alloc->prev_memstack);
+    if(stack_counter > 0) {
+        stack_counter--;
+        page = stack_pointer->page[stack_counter];
     } else {
-        memstack_current = memstack_alloc->prev_memstack;
+        page = stack_pointer;
+        
+        if(stack_pointer->prev == stack_pointer) {
+            panic("No free memory pages\n");
+        } else {
+            stack_pointer = stack_pointer->prev;
+            stack_counter = 127;
+        }
+        
+        #ifdef DEBUG
+        kprintf("[DEBUG] [pmm] Moved stack to %x\n", stack_pointer);
+        #endif
     }
     
     #ifdef DEBUG
-    kprintf("alloc: return address: %x\n", memstack_alloc->start);
-    kprintf("alloc: new memstack_current: %x\n", memstack_current);
+    kprintf("[DEBUG] [pmm] Got address %x\n", page);
     #endif
-    return (void*) memstack_alloc->start;
+    return page;
 }
 
 void pmm_free(uintptr_t page) {
-    struct memory_stack* memstack = (void*) page;
-/*
-    kprintf("memstack: %x\n", memstack);
-    kprintf("memstack2: %x\n", &memstack);
-    kprintf("memstack3: %x\n", *memstack);
-    kprintf("memstack_current: %x\n", memstack_current);
-*/
-    memstack->start = memstack;
-    memstack->prev_memstack = memstack_current;
+    if(page < 0x100000) { // Pages under 1 MB are managed over bitmap
+        // Mark page in bitmap as free
+        kprintf("[TODO] [pmm] Add management for pages less 1 MiB via bitmap\n");
+        #ifdef DEBUG
+        kprintf("[DEBUG] [pmm] Address %x is under 1MiB -> use bitmap\n", page);
+        #endif
+    } else {
+        if(stack_pointer == NULL) {
+            #ifdef DEBUG
+            kprintf("[DEBUG] [pmm] Create stack at %x\n", page);
+            #endif
+            stack_pointer = page;
+            stack_pointer->prev = stack_pointer;
+        } else {
+            if(stack_counter == 127) {
+                #ifdef DEBUG
+                kprintf("[DEBUG] [pmm] Stack is full -> Create new stack at %x\n", page);
+                kprintf("[DEBUG] [pmm] stack_pointer: %x\n", stack_pointer);
+                kprintf("[DEBUG] [pmm] &stack_pointer: %x\n", &stack_pointer);
+                kprintf("[DEBUG] [pmm] stack_pointer->prev: %x\n", stack_pointer->prev);
+                kprintf("[DEBUG] [pmm] --------\n");
+                #endif
 
-    memstack_current = memstack->start;
-}
-
-void stack_init(void* page) {
-    memstack_current = (void*) page;
-    struct memory_stack* memstack = memstack_current;
-
-    memstack->start = memstack;
-    memstack->prev_memstack = 0xbadc0de;
+                struct stack* new_stack = page;
+                new_stack->prev = stack_pointer;
+                stack_pointer = new_stack;
+                stack_counter = 0;
+                
+                #ifdef DEBUG
+                kprintf("[DEBUG] [pmm] stack_pointer: %x\n", stack_pointer);
+                kprintf("[DEBUG] [pmm] &stack_pointer: %x\n", &stack_pointer);
+                kprintf("[DEBUG] [pmm] stack_pointer->prev: %x\n", stack_pointer->prev);
+                #endif                
+            }
+            #ifdef DEBUG
+            kprintf("[DEBUG] [pmm] Add address %x to stack\n", page);
+            #endif
+            stack_pointer->page[stack_counter] = page;
+            stack_counter++;
+            
+        }
+    }
     
-    #ifdef DEBUG
-    kprintf("memstack_current: %x\n", memstack_current);
-    kprintf("memstack: %x\n", memstack);
-    kprintf("memstack->start: %x\n", memstack->start);
-    kprintf("memstack->prev_memstack: %x\n", memstack->prev_memstack);
-    #endif
 }
+

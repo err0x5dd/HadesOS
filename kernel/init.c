@@ -6,6 +6,9 @@
 #include "include/multiboot.h"
 #include "include/keyboard.h"
 
+// Uncomment for debug output
+//#define DEBUG
+
 void init(struct multiboot_info *mb_info) {
     kclean();
     
@@ -14,45 +17,55 @@ void init(struct multiboot_info *mb_info) {
     }
     kprintf("\n");
     
-    kprintf("Starte HadesOS...\n");
+    kprintf("[init] Starting HadesOS...\n");
     
-    // Test
-//    kprintf("Test 0x: %0x !\n", 0xbadc0de);
-//    kprintf("Test  x: %x !\n", 0xbadc0de);
-//    kprintf("Test 0s: %0s !\n", "Teststring");
-//    kprintf("Test  s: %s !\n", "Teststring");
-//    kprintf("Test 0b: %0b !\n", 0xbadc0de);
-//    kprintf("Test  b: %b !\n", 0xbadc0de);
-    
-    kprintf("Aktiviere PMM - physical memory management...\n");
+    kprintf("[init] Activating PMM...\n");
     pmm_init(mb_info);
     //mb_info = NULL;
-    kprintf("PMM aktiviert\n");
+    kprintf("[init] PMM activated\n");
     
-    kprintf("Aktiviere Paging...\n");
-    vmm_init(mb_info);
-    kprintf("Paging aktiviert\n");
+    #ifdef DEBUG
+    uintptr_t page;
+    uintptr_t page_free;
+    kprintf("[DEBUG] [init] Request memory page\n");
+    page = pmm_alloc();
+    kprintf("[DEBUG] [init] Got page  %x\n", page);
+    page_free = pmm_alloc();
+    kprintf("[DEBUG] [init] Got %x\n", page_free);
+    page = pmm_alloc();
+    kprintf("[DEBUG] [init] Got %x\n", page);
+    pmm_free(page_free);
+    kprintf("[DEBUG] [init] Free %x\n", page_free);
+    page = pmm_alloc();
+    kprintf("[DEBUG] [init] Got %x\n", page);
+    page = pmm_alloc();
+    kprintf("[DEBUG] [init] Got %x\n", page);
+    #endif
     
-    kprintf("Lade GDT...\n");
+//    kprintf("[init] Activate Paging...\n");
+//    vmm_init(mb_info);
+//    kprintf("[init] Paging activated\n");
+    
+    kprintf("[init] Loading GDT...\n");
     init_gdt();
-    kprintf("GDT geladen\n");
+    kprintf("[init] GDT loaded\n");
 
-    kprintf("Lade IDT...\n");
+    kprintf("[init] Loading IDT...\n");
     init_idt();
-    kprintf("IDT geladen\n");
+    kprintf("[init] IDT loaded\n");
 
-    kprintf("Aktiviere Tastatur...\n");
+    kprintf("[init] Activating simple keyboard driver...\n");
     kbd_init();
-    kprintf("Tastatur aktiviert\n");
+    kprintf("[init] Keyboard driver activated\n");
 
-    kprintf("Aktiviere Multitasking...\n");
+    kprintf("[init] Activating multitasking...\n");
     init_multitasking(mb_info);
-    kprintf("Multitasking aktiviert\n");
+    kprintf("[init] Multitasking activated\n");
     
-    kprintf("Aktiviere Interrupts...\n");
+    kprintf("[init] Activate interrupts...\n");
     asm volatile("sti");
-    kprintf("Interrupts aktiviert\n");
+    kprintf("[init] Interrupts activated\n");
 
-    kprintf("INIT_END!\n");
+    kprintf("[init] INIT_END!\n");
     while(1);
 }

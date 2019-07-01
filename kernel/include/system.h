@@ -60,4 +60,6 @@ struct cpu_state {
     uint32_t    ss;
 };
 
+void panic(char* msg);
+
 #endif

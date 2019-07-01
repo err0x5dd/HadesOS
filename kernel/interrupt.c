@@ -264,3 +264,7 @@ struct cpu_state* handler(struct cpu_state* cpu) {
     return new_cpu;
 }
 
+void panic(char* msg) {
+    kprintf("%s", msg);
+    asm volatile("int $0x03"); // User breakpoint (#BP) Exception to stop kernel
+}
