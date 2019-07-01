@@ -38,7 +38,8 @@
 void kclean(void);
 
 void ksetpos(int x, int y);
-void ksetcolor(char color);
+void ksetcolor(uint8_t color);
+uint8_t kgetcolor(void);
 
 void kprintf(const char* str, ...);
 
