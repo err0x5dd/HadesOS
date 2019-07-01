@@ -5,7 +5,7 @@
 
 static int curX = 0;
 static int curY = 0;
-static char color = 0x07;
+static uint8_t color = 0x07;
 
 static char* video = (char*) 0xb8000;
 
@@ -90,8 +90,12 @@ void ksetpos(int x, int y) {
     outb(0x3D5, (uint8_t) ((pos >> 8) & 0xFF));
 }
 
-void ksetcolor(char col) {
+void ksetcolor(uint8_t col) {
     color = col;
+}
+
+uint8_t kgetcolor(void) {
+    return color;
 }
 
 void kclean(void) {
