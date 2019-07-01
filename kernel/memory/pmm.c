@@ -14,7 +14,7 @@
 
 
 // Bitmap for pages under 1 MB
-//uint32_t bitmap
+static uint32_t bitmap[8]; 
 
 // Pointer to stack for every page over 1 MB
 // When there is no free memory page, then stack points to NULL
@@ -93,7 +93,7 @@ void pmm_init(struct multiboot_info* mb_info) {
 void* pmm_alloc(void) {
     uintptr_t page = NULL;
     
-    kprintf("[TODO] [pmm] Add allocation for pages less 1 MiB\n");
+    //kprintf("[TODO] [pmm] Add allocation for pages less 1 MiB\n");
     
     #ifdef DEBUG
     kprintf("[DEBUG] [pmm] Get new address from stack\n");
@@ -125,10 +125,18 @@ void* pmm_alloc(void) {
 
 void pmm_free(uintptr_t page) {
     if(page < 0x100000) { // Pages under 1 MB are managed over bitmap
-        // Mark page in bitmap as free
-        kprintf("[TODO] [pmm] Add management for pages less 1 MiB via bitmap\n");
         #ifdef DEBUG
         kprintf("[DEBUG] [pmm] Address %x is under 1MiB -> use bitmap\n", page);
+        #endif
+        
+        // Mark page in bitmap as free
+        bitmap[page / 0x1000 / 32] |= (1 << ((page / 0x1000) % 32));
+        
+        #ifdef DEBUG
+        kprintf("[DEBUG] [pmm] Bit %d in array %d set\n", ((page / 0x1000) % 32), (page / 0x1000 / 32));
+        for(int i = 0; i < 8; i++) {
+            kprintf("[DEBUG] [pmm] Bitmap[%d]: %b\n", i, bitmap[i]);
+        }
         #endif
     } else {
         if(stack_pointer == NULL) {
@@ -157,13 +165,13 @@ void pmm_free(uintptr_t page) {
                 kprintf("[DEBUG] [pmm] &stack_pointer: %x\n", &stack_pointer);
                 kprintf("[DEBUG] [pmm] stack_pointer->prev: %x\n", stack_pointer->prev);
                 #endif                
+            } else {
+                #ifdef DEBUG
+                kprintf("[DEBUG] [pmm] Add address %x to stack\n", page);
+                #endif
+                stack_pointer->page[stack_counter] = page;
+                stack_counter++;
             }
-            #ifdef DEBUG
-            kprintf("[DEBUG] [pmm] Add address %x to stack\n", page);
-            #endif
-            stack_pointer->page[stack_counter] = page;
-            stack_counter++;
-            
         }
     }
     
