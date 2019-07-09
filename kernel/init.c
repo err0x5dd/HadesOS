@@ -7,7 +7,7 @@
 #include "include/keyboard.h"
 
 // Uncomment for debug output
-//#define DEBUG
+#define DEBUG
 
 void init(struct multiboot_info *mb_info) {
     kclean();
@@ -24,27 +24,25 @@ void init(struct multiboot_info *mb_info) {
     //mb_info = NULL;
     kprintf("[init] PMM activated\n");
     
+    kprintf("[init] Activate Paging...\n");
+    vmm_init(mb_info);
+    kprintf("[init] Paging activated\n");
+    
     #ifdef DEBUG
     uintptr_t page;
     uintptr_t page_free;
     kprintf("[DEBUG] [init] Request memory page\n");
-    page = pmm_alloc();
+    page = vmm_alloc(NULL);
     kprintf("[DEBUG] [init] Got page  %x\n", page);
-    page_free = pmm_alloc();
+    page_free = vmm_alloc(NULL);
     kprintf("[DEBUG] [init] Got %x\n", page_free);
-    page = pmm_alloc();
+    page = vmm_alloc(NULL);
     kprintf("[DEBUG] [init] Got %x\n", page);
-    pmm_free(page_free);
-    kprintf("[DEBUG] [init] Free %x\n", page_free);
-    page = pmm_alloc();
+    page = vmm_alloc(NULL);
     kprintf("[DEBUG] [init] Got %x\n", page);
-    page = pmm_alloc();
+    page = vmm_alloc(NULL);
     kprintf("[DEBUG] [init] Got %x\n", page);
     #endif
-    
-//    kprintf("[init] Activate Paging...\n");
-//    vmm_init(mb_info);
-//    kprintf("[init] Paging activated\n");
     
     kprintf("[init] Loading GDT...\n");
     init_gdt();
