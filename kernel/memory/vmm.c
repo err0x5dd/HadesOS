@@ -8,7 +8,7 @@
 #include "../include/mmap.h"
 
 // Uncomment for debug output
-#define DEBUG
+//#define DEBUG
 
 extern const void kernel_start;
 extern const void kernel_end;
@@ -27,17 +27,6 @@ void waitfor(uint32_t max) {
 }
 
 uintptr_t vmm_get_mapping(struct vmm_context* context, uintptr_t virt);
-void vmm_break(struct vmm_context* context) {
-    kprintf("\n---BREAKPOINT---\n");
-    kprintf("MAP_VMM_CONTEXT:  %x\n", MAP_VMM_CONTEXT);
-    kprintf("MAP_VMM_PAGEDIR:  %x\n", MAP_VMM_PAGEDIR);
-    kprintf("context:          %x\n", context);
-    
-    kprintf("context phys:     %x\n", vmm_get_mapping(context, MAP_VMM_CONTEXT));
-    
-    kprintf("context->pagedir: %x\n", context->pagedir);
-    while(1);
-}
 
 void* vmm_alloc_kernel(struct vmm_context* context) {
     if(!(flags & VMM_FLAG_ACTIVE)) {
@@ -47,21 +36,26 @@ void* vmm_alloc_kernel(struct vmm_context* context) {
 	return pmm_alloc();
     }
 
+    #ifdef DEBUG
     kprintf("[DEBUG] [vmm] Kernelspace allocation start\n");
+    #endif
+
     if(context == NULL)
         context = (struct vmm_context*) MAP_VMM_CONTEXT;
 
     uintptr_t memreq = pmm_alloc();
+
     #ifdef DEBUG
     kprintf("[DEBUG] [vmm] vmm_alloc: %x\n", memreq);
     #endif
     
     kprintf("[TODO] Check for max kernelspace range\n");
-    //vmm_break(context);
     vmm_map_page(context, context->next_kernelspace, memreq);
     context->next_kernelspace += PAGE_SIZE;
-
+    
+    #ifdef DEBUG
     kprintf("[DEBUG] [vmm] Will return %x\n", (context->next_kernelspace - PAGE_SIZE));
+    #endif
 
     return (context->next_kernelspace - PAGE_SIZE);
 }
@@ -74,14 +68,17 @@ void* vmm_alloc(struct vmm_context* context) {
 	return pmm_alloc();
     }
 
-    kprintf("[DEBUG] [vmm] Allocation start\n");
     if(context == NULL)
         context = kernel_context;
-    kprintf("[DEBUG] [vmm] Start request of physical memory\n");
-    uintptr_t memreq = pmm_alloc();
-    kprintf("[DEBUG] [vmm] Got physical address %x\n", memreq);
+    
     #ifdef DEBUG
-    kprintf("[DEBUG] [vmm] vmm_alloc: %x\n", memreq);
+    kprintf("[DEBUG] [vmm] Start request of physical memory\n");
+    #endif
+
+    uintptr_t memreq = pmm_alloc();
+
+    #ifdef DEBUG
+    kprintf("[DEBUG] [vmm] Got physical address %x\n", memreq);
     #endif
     
     vmm_map_page(context, context->next_userspace, memreq);
@@ -98,6 +95,7 @@ int vmm_map_page(struct vmm_context* context, uintptr_t virt, uintptr_t phys) {
     #ifdef DEBUG
     kprintf("[DEBUG] [vmm] Map physical addr %x to virtual addr %x\n", phys, virt);
     #endif
+
     uint32_t page_index = virt / 0x1000;
     uint32_t pd_index = page_index / 1024;
     uint32_t pt_index = page_index % 1024;
@@ -110,24 +108,29 @@ int vmm_map_page(struct vmm_context* context, uintptr_t virt, uintptr_t phys) {
     #ifdef DEBUG
     kprintf("[DEBUG] [vmm] Search/Create page table\n");
     #endif
+
     uint32_t* pagedir;
     if(flags & VMM_FLAG_ACTIVE) {
 	pagedir = MAP_VMM_PAGEDIR;
     } else {
 	pagedir = context->pagedir;
     }
+
     #ifdef DEBUG
     kprintf("[DEBUG] [vmm] *pagedir set to %x\n", pagedir);
     #endif
+
     // Search/Create page table
     if(pagedir[pd_index] & PTE_PRESENT) {
 	#ifdef DEBUG
 	kprintf("[DEBUG] [vmm] PTE_PRESENT flag is set\n");
 	#endif
+
 	if(flags & VMM_FLAG_ACTIVE)
 	    page_table = (uint32_t*) (MAP_VMM_PAGETABLE + (PAGE_SIZE * pd_index));
 	else
 	    page_table = (uint32_t*) (pagedir[pd_index] & ~0xFFF);
+
 	#ifdef DEBUG
 	kprintf("[DEBUG] [vmm] *page_table set to %x\n", page_table);
 	#endif
@@ -136,30 +139,31 @@ int vmm_map_page(struct vmm_context* context, uintptr_t virt, uintptr_t phys) {
 	kprintf("[DEBUG] [vmm] PTE_PRESENT flag isn't set\n");
 	kprintf("[DEBUG] [vmm] Create page_table\n");
 	#endif
-	//kprintf("[DEBUG] [vmm] NOP Loop\n");
-	//for(uint32_t i = 0; i < 0x0FFFFFFF; i++);
+
         page_table = pmm_alloc();
+
+	#ifdef DEBUG
 	kprintf("[DEBUG] [vmm] Create page_table at %x\n", page_table);
-	//vmm_map_page(context, page_table, page_table);
-        //for(int i = 0; i < 1024; i++) {
-        //    page_table[i] = 0;
-        //}
-        //context->pagedir[pd_index] = (uint32_t) page_table | PTE_PRESENT | PTE_WRITE | PTE_USER;
+	#endif
+
         pagedir[pd_index] = (uint32_t) page_table | PTE_PRESENT | PTE_WRITE | PTE_USER;
 	vmm_map_page(context, (uintptr_t) (MAP_VMM_PAGETABLE + (PAGE_SIZE * pd_index)), page_table);
 	page_table = (uintptr_t) (MAP_VMM_PAGETABLE + (PAGE_SIZE * pd_index));
-        //pagedir[pd_index] = (uint32_t) page_table | PTE_PRESENT | PTE_WRITE;
-	//kprintf("[DEBUG] [vmm] context->pagedir[pd_index %d]: %x\n", pd_index, context->pagedir[pd_index]);
+	
+	#ifdef DEBUG
 	kprintf("[DEBUG] [vmm] pagedir[pd_index %d]: %x\n", pd_index, pagedir[pd_index]);
+	#endif
     }
     
     // Add new mapping
     page_table[pt_index] = phys | PTE_PRESENT | PTE_WRITE | PTE_USER;
     //page_table[pt_index] = phys | PTE_PRESENT | PTE_WRITE;
+
     #ifdef DEBUG
     kprintf("[DEBUG] [vmm] Add new mapping in page_table[pt_index %d] %x\n", pt_index, page_table[pt_index]);
     kprintf("[DEBUG] [vmm] Inval old mapping\n");
     #endif
+
     asm volatile("invlpg %0" : : "m" (*(char*) virt));
     
     #ifdef DEBUG
@@ -173,7 +177,7 @@ void vmm_activate_context(struct vmm_context* context) {
     #ifdef DEBUG
     kprintf("[DEBUG] [vmm] Load %x as new page directory\n", context->pagedir);
     #endif
-    //while(1);
+
     asm volatile("mov %0, %%cr3" : : "r" (context->pagedir));
     
     active_context = context;
@@ -184,16 +188,24 @@ void vmm_activate_context(struct vmm_context* context) {
 
     vmm_map_context(context);
 
+    #ifdef DEBUG
     kprintf("[DEBUG] [vmm] New context mapped\n");
+    #endif
 }
 
 struct vmm_context* vmm_create_context(void) {
     struct vmm_context* context = pmm_alloc();
     
+    #ifdef DEBUG
     kprintf("[DEBUG] [vmm] Got %x as context addr\n", context);
+    #endif
 
     context->pagedir = pmm_alloc();
+
+    #ifdef DEBUG
     kprintf("[DEBUG] [vmm] Got %x as context->pagedir addr\n", context->pagedir);
+    #endif
+
     for(int i = 0; i < 1024; i++) {
         context->pagedir[i] = NULL;
     }
@@ -204,26 +216,37 @@ struct vmm_context* vmm_create_context(void) {
 }
 
 uintptr_t vmm_get_mapping(struct vmm_context* context, uintptr_t virt) {
+    #ifdef DEBUG
     kprintf("[DEBUG] [vmm] Get mapping for virt %x\n", virt);
-    
+    #endif
+
     uint32_t page_index = virt / 0x1000;
     uint32_t pd_index = page_index / 1024;
     uint32_t pt_index = page_index % 1024;
 
     if(!(flags & VMM_FLAG_ACTIVE)) {
+	#ifdef DEBUG
 	kprintf("[DEBUG] [vmm] Paging not enabled\n");
+	#endif
 	return NULL;
     }
 
     uintptr_t* pagedir;
     if(context = active_context) {
+	#ifdef DEBUG
 	kprintf("[DEBUG] [vmm] context is active_context\n");
+	#endif
 	pagedir = MAP_VMM_PAGEDIR;
     } else {
+	#ifdef DEBUG
 	kprintf("[DEBUG] [vmm] Map temporary context %x\n", context);
-	
+	#endif
+
 	vmm_map_page(active_context, MAP_VMM_TEMP_CONTEXT, context);
+
+	#ifdef DEBUG
 	kprintf("[DEBUG] [vmm] Map temporary pagedir %x\n", context->pagedir);
+	#endif
 	
 	vmm_map_page(active_context, MAP_VMM_TEMP_PAGEDIR, context->pagedir);
 	pagedir = MAP_VMM_TEMP_PAGEDIR;
@@ -232,14 +255,20 @@ uintptr_t vmm_get_mapping(struct vmm_context* context, uintptr_t virt) {
     
     if(pagedir[pd_index] & PTE_PRESENT) {
 	if(context == active_context) {
+	    #ifdef DEBUG
 	    kprintf("[DEBUG] [vmm] active_context, find page_table in pagedir[pd_index %d]\n", pd_index);
+	    #endif
 	    
-	    //page_table = (pagedir[pd_index] & ~0xFFF);
 	    page_table = (uintptr_t) (MAP_VMM_PAGETABLE + (pd_index * 0x1000));
+
+	    #ifdef DEBUG
 	    kprintf("[DEBUG] [vmm] Got page_table: %x\n", page_table);
+	    #endif
 	    
 	} else {
+	    #ifdef DEBUG
 	    kprintf("[DEBUG] [vmm] Map temporary pagetable\n");
+	    #endif
 	    
 	    vmm_map_page(active_context, MAP_VMM_TEMP_PAGETABLE, (uintptr_t) (pagedir[pd_index] & ~0xFFF));
 	    page_table = MAP_VMM_TEMP_PAGETABLE;
@@ -248,9 +277,11 @@ uintptr_t vmm_get_mapping(struct vmm_context* context, uintptr_t virt) {
 	return 0xFFFFFFFF;
     }
 
+    #ifdef DEBUG
     kprintf("[DEBUG] [vmm] Try accessing page_table[pt_index %d] on %x\n", pt_index, page_table);
     kprintf("[DEBUG] [vmm] Physical addr is %x\n", page_table[pt_index] & ~0xFFF);
-    
+    #endif
+
     return (page_table[pt_index] & ~0xFFF);
 }
 
@@ -264,33 +295,53 @@ void vmm_map_context(struct vmm_context* context) {
     }
     
     if(flags & VMM_FLAG_ACTIVE) {
+	#ifdef DEBUG
 	kprintf("[DEBUG] [vmm] Mapping of context %x -> %x\n", context, MAP_VMM_CONTEXT);
+	#endif
+
 	vmm_map_page(active_context, MAP_VMM_CONTEXT, context);
 	
+	#ifdef DEBUG
 	kprintf("[DEBUG] [vmm] Mapping of context->pagedir %x -> %x\n", ((struct vmm_context*) MAP_VMM_CONTEXT)->pagedir, MAP_VMM_PAGEDIR);
+	#endif
+
 	vmm_map_page(active_context, MAP_VMM_PAGEDIR, ((struct vmm_context*) MAP_VMM_CONTEXT)->pagedir);
 	
 	for(uint16_t i = 0; i < 1024; i++) {
 	    if(((uintptr_t*) MAP_VMM_PAGEDIR)[i] & PTE_PRESENT) {
+		#ifdef DEBUG
 		kprintf("[DEBUG] [vmm] Mapping of page_table from context->pagedir[%d] %x -> %x\n", i, ((uintptr_t*) MAP_VMM_PAGEDIR)[i], MAP_VMM_PAGETABLE + (i * 0x1000));
+		#endif
 		vmm_map_page(active_context, MAP_VMM_PAGETABLE + (i * 0x1000), ((uintptr_t*) MAP_VMM_PAGEDIR)[i]);
 	    } else {
+		#ifdef DEBUG
 		kprintf("[DEBUG] [vmm] page_table at pagedir[%d] not yet set\n", i);
+		#endif
 	    }
 	}
     } else {
+	#ifdef DEBUG
 	kprintf("[DEBUG] [vmm] Mapping of context %x -> %x\n", context, MAP_VMM_CONTEXT);
+	#endif
+
 	vmm_map_page(active_context, MAP_VMM_CONTEXT, context);
 	
+	#ifdef DEBUG
 	kprintf("[DEBUG] [vmm] Mapping of context->pagedir %x -> %x\n", context->pagedir, MAP_VMM_PAGEDIR);
+	#endif
+
 	vmm_map_page(active_context, MAP_VMM_PAGEDIR, context->pagedir);
 	
 	for(uint16_t i = 0; i < 1024; i++) {
 	    if(((uintptr_t*) MAP_VMM_PAGEDIR)[i] & PTE_PRESENT) {
+		#ifdef DEBUG
 		kprintf("[DEBUG] [vmm] Mapping of page_table from context->pagedir[%d] %x -> %x\n", i, context->pagedir[i], MAP_VMM_PAGETABLE + (i * 0x1000));
+		#endif
 		vmm_map_page(active_context, MAP_VMM_PAGETABLE + (i * 0x1000), context->pagedir[i]);
 	    } else {
+		#ifdef DEBUG
 		kprintf("[DEBUG] [vmm] page_table at pagedir[%d] not yet set\n", i);
+		#endif
 	    }
 	}
     }
@@ -300,11 +351,6 @@ void vmm_init(struct multiboot_info* mb_info) {
     uint32_t cr0;
     
     kernel_context = vmm_create_context();
-    
-    //// Map first 4 MB for kernel
-    //for(int i = 0; i < 4096 * 1024; i += 0x1000) {
-    //    vmm_map_page(kernel_context, i, i);
-    //}
     
     struct multiboot_mmap* mmap = mb_info->mbs_mmap_addr;
     struct multiboot_mmap* mmap_end = (void*)
@@ -325,7 +371,6 @@ void vmm_init(struct multiboot_info* mb_info) {
                     kprintf("[DEBUG] [vmm] %x is used by kernel -> 1:1 Mapping\n", addr);
                     #endif
                     vmm_map_page(kernel_context, (uintptr_t) addr, (uintptr_t) addr);
-                //} else if(addr >= (void*) &mb_info && addr <= (void*) (&mb_info + sizeof(struct multiboot_info))) { // exclude multiboot structure
                 } else if(addr >= (void*) mb_info && addr <= (void*) (mb_info + sizeof(struct multiboot_info))) { // exclude multiboot structure
                     #ifdef DEBUG
                     kprintf("[DEBUG] [vmm] %x is used by multiboot structure -> 1:1 Mapping\n", addr);
@@ -376,26 +421,16 @@ void vmm_init(struct multiboot_info* mb_info) {
     for(uint32_t i = 0; i < mb_info->mbs_mods_count; i++) {
         struct multiboot_mods* mb_mods = (mb_info->mbs_mods_addr + ((i - 1) * sizeof(struct multiboot_mods)));
 	for(uint32_t addr = mb_mods->mod_start; addr <= mb_mods->mod_end; addr += 0x1000) {
+	    #ifdef DEBUG
 	    kprintf("[DEBUG] [vmm] Map mod structure at %x\n", addr);
+	    #endif
             vmm_map_page(kernel_context, (uintptr_t) addr, (uintptr_t) addr);
 	}
     }
 
     // Map kernel_context
     vmm_map_context(kernel_context);
-    #ifdef DEBUG
-    //kprintf("[DEBUG] [vmm] kernel_context mapping: %x at %x\n", kernel_context, MAP_VMM_CONTEXT);
-    #endif
-    //vmm_map_page(kernel_context, MAP_VMM_CONTEXT, kernel_context);
-    
-    // Map kernel_context->pagedir
-    #ifdef DEBUG
-    //kprintf("[DEBUG] [vmm] kernel_context->pagedir mapping: %x at %x\n", kernel_context->pagedir, MAP_VMM_PAGEDIR);
-    #endif
-    //vmm_map_page(kernel_context, MAP_VMM_PAGEDIR, kernel_context->pagedir);
-    
-    //vmm_map_page(kernel_context, MAP_VMM_PAGEDIR, (uint32_t*) (kernel_context->pagedir[i] & ~0xFFF));
-    
+
     vmm_activate_context(kernel_context);
     
     #ifdef DEBUG
@@ -413,8 +448,5 @@ void vmm_init(struct multiboot_info* mb_info) {
     flags |= VMM_FLAG_ACTIVE;
     active_context = kernel_context;
     kernel_context = MAP_VMM_CONTEXT;
-    
-    
-    //vmm_break(kernel_context);
 }
 

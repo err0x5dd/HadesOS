@@ -91,11 +91,16 @@ static void send_keyboard_command(uint8_t command) {
 }
 
 void kbd_init(void) {
-    
-    //kbuff = (uint8_t*) pmm_alloc();
+    #ifdef DEBUG
     kprintf("[DEBUG] [kbd] Request kernel page\n");
+    #endif
+
     kbuff = (uint8_t*) vmm_alloc_kernel(NULL);
+
+    #ifdef DEBUG
     kprintf("[DEBUG] [kbd] Got kernel page %x\n", kbuff);
+    #endif
+
     memset(kbuff, 0x00, PAGE_SIZE);
 
     kbuff_head = kbuff;
@@ -149,20 +154,18 @@ uint8_t kbd_translate(uint8_t scan) {
 void kbd_isr(void) {
     uint8_t keycode = kbd_translate(inb(0x60));
     #ifdef DEBUG
-    kprintf("Received keycode: %x\n", keycode);
+    kprintf("[DEBUG] [kbd] Received keycode: %x\n", keycode);
     #endif
     if(keycode != 0x00) {
         if(kbuff_tail < kbuff + PAGE_SIZE) {
             #ifdef DEBUG
-            kprintf("max: %x\n", kbuff + PAGE_SIZE);
-            kprintf("cur: %x\n", kbuff_tail);
+            kprintf("[DEBUG] [kbd] max: %x\n", kbuff + PAGE_SIZE);
+            kprintf("[DEBUG] [kbd] cur: %x\n", kbuff_tail);
             #endif
             *kbuff_tail = keycode;
             kbuff_tail++;
         } else {
-            #ifdef DEBUG
-            kprintf("Not enough keybuffer!\n");
-            #endif
+            kprintf("[kbd] Not enough keybuffer!\n");
         }
     }
 }
@@ -225,7 +228,7 @@ char getc() {
     }
     char c = keycode_to_ascii(key);
     #ifdef DEBUG
-    kprintf("Ascii %c returned\n", c);
+    kprintf("[DEBUG] [kbd] Ascii %c returned\n", c);
     #endif
     return c;
 }

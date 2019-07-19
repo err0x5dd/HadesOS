@@ -7,7 +7,7 @@
 #include "../include/console.h"
 
 // Uncomment for debug output
-#define DEBUG
+//#define DEBUG
 //#define DEBUG_LVL2
 //#define DEBUG_LVL3
 
