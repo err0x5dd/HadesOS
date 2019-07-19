@@ -30,6 +30,7 @@ static void task_b(void) {
     while(1);
 }
 
+<<<<<<< Updated upstream
 
 
 const char* cmds[] = {"help", "addr"};
@@ -119,6 +120,8 @@ static void task_shell(void) {
     while(1);
 }
 
+=======
+>>>>>>> Stashed changes
 struct task* init_task(void* entry) {
     
     //uint8_t* stack = pmm_alloc();
@@ -162,12 +165,13 @@ void init_multitasking(struct multiboot_info* mb_info) {
     //init_task(task_shell);
     
     if(mb_info->mbs_mods_count == 0) {
-        kprintf("Starting shell\n");
-        init_task(task_shell);
+        kprintf("Starting test tasks a and b\n");
+        init_task(task_a);
+        init_task(task_b);
     } else {
         kprintf("Starting first module\n");
         struct multiboot_mods* modules = mb_info->mbs_mods_addr;
-        init_elf((void*) modules[0].mod_start);
+        init_mod(modules);
     }
 }
 

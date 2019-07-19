@@ -23,7 +23,7 @@ struct cpu_state* syscall(struct cpu_state* cpu) {
         case SYSCALL_SWITCH_TASK:
             new_cpu = schedule(cpu);
             break;
-        case SYSCALL_PMM_ALLOC:
+        case SYSCALL_PAGE_ALLOC:
             #ifdef DEBUG
             kprintf("eax: %x\n", new_cpu->eax);
             #endif
@@ -36,6 +36,11 @@ struct cpu_state* syscall(struct cpu_state* cpu) {
             kprintf("eax: %x\n", new_cpu->eax);
             #endif
             break;
+	case SYSCALL_GETC:
+	    ;
+	    char c = getc();
+	    new_cpu->eax = (uint32_t) c;
+	    break;
     }
 
     return new_cpu;

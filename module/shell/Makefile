@@ -1,16 +1,17 @@
 SRCS = $(shell find . -type f -name '*.[cS]')
 OBJS = $(addsuffix .o, $(basename $(SRCS)))
+OUTP = $(basename $(shell pwd))
 
 CC = gcc
 LD = ld
 
 ASFLAGS = -m32
-CFLAGS = -m32 -Wall -g -fno-stack-protector -I include
-LDFLAGS = -melf_i386 -Ttest2.ld
+CFLAGS = -m32 -Wall -g -fno-stack-protector -I ../include
+LDFLAGS = -melf_i386 -Tmodule.ld
 
-test: $(OBJS)
-	$(LD) $(LDFLAGS) -o ../../bin/module/test2.ko $^
-	#objdump -S ../../bin/module/test2.ko >debug.txt
+module: $(OBJS)
+	$(LD) $(LDFLAGS) -o ../../bin/module/$(OUTP).ko $^
+	objdump -S ../../bin/module/$(OUTP).ko >debug.txt
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $^

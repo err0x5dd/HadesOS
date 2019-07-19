@@ -1,5 +1,5 @@
-#include "../../kernel/include/stdint.h"
-#include "../../kernel/include/syscall.h"
+#include <stdint.h>
+#include <syscall.h>
 
 #define PAGE_SIZE 4096
 
@@ -8,7 +8,7 @@ void print(char* str) {
     char* mem;
     asm volatile("mov %1, %%eax;"
                  "int $0x30;"
-                 "mov %%eax, %0" : "=m" (mem) : "i" (SYSCALL_PMM_ALLOC));
+                 "mov %%eax, %0" : "=m" (mem) : "i" (SYSCALL_PAGE_ALLOC));
     
     char c = str[0];
     for(int i = 0; c != '\0' && i < PAGE_SIZE; i++) {
@@ -21,8 +21,10 @@ void print(char* str) {
                  "int $0x30" : : "i" (SYSCALL_PRINTS), "m" (mem));
 }
 
+
+
 void _start(void) {
     print("Hello World\n");
-    
+
     while(1);
 }

@@ -1,0 +1,28 @@
+SRCS = $(shell find . -type f -name '*.[cS]')
+OBJS = $(addsuffix .o, $(basename $(SRCS)))
+OUTP = $(shell basename $(shell pwd))
+
+CC = gcc
+LD = ld
+
+ASFLAGS = -m32
+CFLAGS = -m32 -Wall -g -fno-stack-protector -I ../include
+LDFLAGS = -melf_i386 -Tmodule.ld
+
+module: $(OBJS)
+	$(LD) $(LDFLAGS) -o ../../bin/module/$(OUTP).ko $^
+	objdump -S ../../bin/module/$(OUTP).ko >debug.txt
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $^
+	git add $^
+
+%.o: %.S
+	$(CC) $(ASFLAGS) -c -o $@ $^
+	git add $^
+
+clean:
+	rm $(OBJS)
+	clear
+
+.PHONY: clean all
