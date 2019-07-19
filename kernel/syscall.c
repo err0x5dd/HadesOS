@@ -28,8 +28,8 @@ struct cpu_state* syscall(struct cpu_state* cpu) {
             kprintf("eax: %x\n", new_cpu->eax);
             #endif
             ;
-            void* req = pmm_alloc();
-            //void* req = vmm_alloc(NULL);
+            //void* req = pmm_alloc();
+            void* req = vmm_alloc(NULL);
             new_cpu->eax = (uint32_t) req;
             #ifdef DEBUG
             kprintf("Addr: %x\n", (uint32_t) req);
