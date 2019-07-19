@@ -93,7 +93,9 @@ static void send_keyboard_command(uint8_t command) {
 void kbd_init(void) {
     
     //kbuff = (uint8_t*) pmm_alloc();
-    kbuff = (uint8_t*) vmm_alloc(NULL);
+    kprintf("[DEBUG] [kbd] Request kernel page\n");
+    kbuff = (uint8_t*) vmm_alloc_kernel(NULL);
+    kprintf("[DEBUG] [kbd] Got kernel page %x\n", kbuff);
     memset(kbuff, 0x00, PAGE_SIZE);
 
     kbuff_head = kbuff;

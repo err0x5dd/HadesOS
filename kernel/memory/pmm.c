@@ -47,7 +47,8 @@ void pmm_init(struct multiboot_info* mb_info) {
                     #ifdef DEBUG
                     kprintf("[DEBUG] [pmm] %x is used by kernel -> no free memory page\n", addr);
                     #endif
-                } else if(addr >= (void*) &mb_info && addr <= (void*) (&mb_info + sizeof(struct multiboot_info))) { // exclude multiboot structure
+                //} else if(addr >= (void*) &mb_info && addr <= (void*) (&mb_info + sizeof(struct multiboot_info))) { // exclude multiboot structure
+                } else if(addr >= (void*) mb_info && addr <= (void*) (mb_info + sizeof(struct multiboot_info))) { // exclude multiboot structure
                     #ifdef DEBUG
                     kprintf("[DEBUG] [pmm] %x is used by multiboot structure -> no free memory page\n", addr);
                     #endif 
@@ -92,6 +93,10 @@ uint32_t pmm_alloc(void) {
 	pmm_search_page();
     }
     
+    #ifdef DEBUG_LVL3
+    kprintf("[DEBUG_LVL3] [pmm] next_bit: %d / %x\n", next_bit, next_bit);
+    #endif
+
     page = next_bit * PAGE_SIZE;
     bitmap[next_bit / 32] &= ~(1 << (next_bit % 32));
 
@@ -129,12 +134,23 @@ void pmm_search_page(void) {
     #ifdef DEBUG_LVL2
     kprintf("[DEBUG_LVL2] [pmm] Searching for next free page\n");
     #endif
-    for(uint32_t i = 0; i < PMM_BITMAP_SIZE; i++) {
-	if((bitmap[i] & 0xFFFFFF) != 0x000000) { // check for free pages
+    // Start search at 1 MiB
+    for(uint32_t i = 8; i < PMM_BITMAP_SIZE; i++) {
+	#ifdef DEBUG_LVL3
+	kprintf("[DEBUG_LVL3] [pmm] bitmap[%d]: %x / %b\n", i, bitmap[i], bitmap[i]);
+	#endif
+	if(bitmap[i] != 0x00000000) { // check for free pages
 	    for(uint8_t j = 0; j < 32; j++) {
-		if((bitmap[i] & (1<<j)) == 1) {
+		if(bitmap[i] & (1<<j)) {
 		    next_bit = i*32 + j;
-		    break;
+		    #ifdef DEBUG_LVL3
+		    kprintf("[DEBUG_LVL3] [pmm] New next Bit: %d / %x\n", next_bit, next_bit);
+		    #endif
+		    return;
+		} else {
+		    #ifdef DEBUG_LVL3
+		    kprintf("[DEBUG_LVL3] [pmm] Bit %d / %x is not free\n", i * 32 + j, i * 32 + j);
+		    #endif
 		}
 	    }
 	}
