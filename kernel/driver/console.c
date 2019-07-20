@@ -28,8 +28,8 @@ static void kprintc(char c) {
     if(curX >= 80 || c == '\n') {
         curY++;
         curX = 0;
-        write_serial('\r');
-        //write_serial('\n');
+        //write_serial('\r');
+        write_serial('\n');
     }
     
     if(curY > 24) {
