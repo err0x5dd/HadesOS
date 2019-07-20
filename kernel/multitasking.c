@@ -1,11 +1,11 @@
-#include "include/console.h"
-#include "include/system.h"
-#include "include/mm.h"
-#include "include/multitasking.h"
-#include "include/keyboard.h"
-#include "include/syscall.h"
-#include "include/multiboot.h"
-#include "include/loader.h"
+#include <console.h>
+#include <system.h>
+#include <mm.h>
+#include <multitasking.h>
+#include <keyboard.h>
+#include <syscall.h>
+#include <multiboot.h>
+#include <loader.h>
 
 static struct task* first_task = NULL;
 static struct task* current_task = NULL;

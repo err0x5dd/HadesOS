@@ -1,10 +1,10 @@
-#include "include/console.h"
-#include "include/interrupt.h"
-#include "include/system.h"
-#include "include/multitasking.h"
-#include "include/mm.h"
-#include "include/multiboot.h"
-#include "include/keyboard.h"
+#include <console.h>
+#include <interrupt.h>
+#include <system.h>
+#include <multitasking.h>
+#include <mm.h>
+#include <multiboot.h>
+#include <keyboard.h>
 
 // Uncomment for debug output
 #define DEBUG
@@ -16,7 +16,11 @@ extern struct vmm_context* active_context;
 
 void init(struct multiboot_info *mb_info) {
     kclean();
+
+    #ifdef DEBUG
     kprintf("[DEBUG] [init] mb_info:  %x\n", mb_info);
+    #endif
+
     for(int i = 0; i < 80; i++) {
         kprintf("-");
     }

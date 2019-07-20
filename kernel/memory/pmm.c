@@ -1,10 +1,10 @@
 // pmm = physical memory manager
 
-#include "../include/stdint.h"
-#include "../include/mm.h"
-#include "../include/multiboot.h"
-#include "../include/system.h"
-#include "../include/console.h"
+#include <stdint.h>
+#include <mm.h>
+#include <multiboot.h>
+#include <system.h>
+#include <console.h>
 
 // Uncomment for debug output
 //#define DEBUG

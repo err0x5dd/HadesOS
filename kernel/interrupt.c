@@ -1,9 +1,9 @@
-#include "include/interrupt.h"
-#include "include/system.h"
-#include "include/console.h"
-#include "include/multitasking.h"
-#include "include/keyboard.h"
-#include "include/syscall.h"
+#include <interrupt.h>
+#include <system.h>
+#include <console.h>
+#include <multitasking.h>
+#include <keyboard.h>
+#include <syscall.h>
 
 extern void isr_0(void);
 extern void isr_1(void);

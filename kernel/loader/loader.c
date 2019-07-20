@@ -1,4 +1,4 @@
-#include "../include/loader.h"
+#include <loader.h>
 
 
 void load_binary(void* p) {

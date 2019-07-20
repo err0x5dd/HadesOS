@@ -1,8 +1,8 @@
-#include "include/syscall.h"
-#include "include/console.h"
-#include "include/stdint.h"
-#include "include/multitasking.h"
-#include "include/mm.h"
+#include <syscall.h>
+#include <console.h>
+#include <stdint.h>
+#include <multitasking.h>
+#include <mm.h>
 
 // Uncomment for debug output
 //#define DEBUG

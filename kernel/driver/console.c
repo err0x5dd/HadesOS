@@ -1,7 +1,7 @@
-#include "../include/console.h"
-#include "../include/stdarg.h"
-#include "../include/serial.h"
-#include "../include/system.h"
+#include <console.h>
+#include <stdarg.h>
+#include <serial.h>
+#include <system.h>
 
 static int curX = 0;
 static int curY = 0;

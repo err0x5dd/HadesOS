@@ -1,9 +1,9 @@
-#include "../include/elf.h"
-#include "../include/console.h"
-#include "../include/system.h"
-#include "../include/multitasking.h"
-#include "../include/mm.h"
-#include "../include/multiboot.h"
+#include <elf.h>
+#include <console.h>
+#include <system.h>
+#include <multitasking.h>
+#include <mm.h>
+#include <multiboot.h>
 
 void init_mod(struct multiboot_mods* mod) {
     kprintf("[LOADER] [mod] Initialize module: %s\n", mod->string);
