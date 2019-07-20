@@ -29,12 +29,12 @@ static void kprintc(char c) {
         curY++;
         curX = 0;
         write_serial('\r');
-        write_serial('\n');
+        //write_serial('\n');
     }
     
-    if(c == '\n') {
-        return;
-    }
+    //if(c == '\n') {
+    //    return;
+    //}
     
     if(curY > 24) {
         kscroll();
