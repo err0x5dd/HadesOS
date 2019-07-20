@@ -32,12 +32,12 @@ static void kprintc(char c) {
         //write_serial('\n');
     }
     
-    //if(c == '\n') {
-    //    return;
-    //}
-    
     if(curY > 24) {
         kscroll();
+    }
+    
+    if(c == '\n') {
+        return;
     }
     
     video[2 * (curY * 80 + curX)] = c;
