@@ -265,6 +265,9 @@ struct cpu_state* handler(struct cpu_state* cpu) {
 }
 
 void panic(char* msg) {
+    uint8_t col = kgetcolor();
+    ksetcolor(COLOR_FG_BLUE | COLOR_BG_BLACK);
     kprintf("%s", msg);
+    ksetcolor(col);
     asm volatile("int $0x03"); // User breakpoint (#BP) Exception to stop kernel
 }

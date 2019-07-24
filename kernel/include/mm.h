@@ -25,6 +25,7 @@ void pmm_free(uintptr_t page);
 void vmm_init(struct multiboot_info* mb_info);
 void* vmm_alloc(struct vmm_context* context);
 void* vmm_alloc_kernel(struct vmm_context* context);
+void* vmm_alloc_at(struct vmm_context* context, uintptr_t vaddr);
 int vmm_map_page(struct vmm_context* context, uintptr_t virt, uintptr_t phys);
 
 #endif

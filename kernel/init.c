@@ -72,9 +72,9 @@ void init(struct multiboot_info *mb_info) {
     //kprintf("[init] Endless Loop\n");
     //while(1);
 
-    kprintf("[init] Activating simple keyboard driver...\n");
-    kbd_init();
-    kprintf("[init] Keyboard driver activated\n");
+    //kprintf("[init] Activating simple keyboard driver...\n");
+    //kbd_init();
+    //kprintf("[init] Keyboard driver activated\n");
     //wait();
 
     kprintf("[init] Activating multitasking...\n");
