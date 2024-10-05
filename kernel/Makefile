@@ -5,7 +5,7 @@ CC = i686-elf-gcc
 LD = i686-elf-ld
 
 ASFLAGS = -m32
-CFLAGS = -m32 -Wall -g -fno-stack-protector -I include
+CFLAGS = -m32 -Wall -g -fno-stack-protector -I include -Wno-int-conversion -Wno-error=implicit-function-declaration
 LDFLAGS = -melf_i386 -Tkernel.ld
 
 kernel: $(OBJS)

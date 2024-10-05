@@ -44,7 +44,7 @@ static void task_counter(void) {
 
 struct task* init_task(void* entry, uint32_t pid) {
     if(pid == NULL)
-	pid = ++last_pid;
+	   pid = ++last_pid;
 
     struct vmm_context* context;
 

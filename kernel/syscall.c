@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <multitasking.h>
 #include <mm.h>
+#include <keyboard.h>
 
 // Uncomment for debug output
 //#define DEBUG

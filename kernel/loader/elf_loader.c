@@ -88,7 +88,7 @@ void init_elf(void* file) {
     //while(1);
     
     kprintf("[loader] [elf] Start new task at %x\n", file);
-    init_task((void*) ehdr->e_entry);
+    init_task((void*) ehdr->e_entry, NULL);
 }
 
 int check_elf(Elf32_Ehdr* ehdr) {
