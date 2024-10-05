@@ -2,8 +2,8 @@ SRCS = $(shell find . -type f -name '*.[cS]')
 OBJS = $(addsuffix .o, $(basename $(SRCS)))
 OUTP = $(basename $(shell pwd))
 
-CC = gcc
-LD = ld
+CC = i686-elf-gcc
+LD = i686-elf-ld
 
 ASFLAGS = -m32
 CFLAGS = -m32 -Wall -g -fno-stack-protector -I _include
